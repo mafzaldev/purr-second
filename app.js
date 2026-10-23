@@ -424,6 +424,22 @@
           ...reqs(drainedAt + 800, drainedAt + 1000, drainedAt + 1200),
         ],
       },
+      {
+        label: 'Compare',
+        compare: true,
+        eyebrow: 'Wrap-up',
+        title: 'All five algorithms at once',
+        lead: 'The same cats, sent through all five algorithms side by side. Pick a pattern to see how each one copes.',
+        html: `
+          <h3>Which one should I use?</h3>
+          <ul>
+            <li><b>Token bucket</b>: the usual default for APIs. Allows rushes and is cheap.</li>
+            <li><b>Sliding window counter</b>: strict "N per window" limits with little memory.</li>
+            <li><b>Sliding log</b>: when you need exact limits and the limit is small.</li>
+            <li><b>Leaky bucket</b>: when the backend needs a steady flow and waiting is fine.</li>
+            <li><b>Fixed window</b>: when simplicity matters more than sneaky cats at a boundary.</li>
+          </ul>`,
+      },
     ];
   }
 
@@ -653,6 +669,158 @@
     text(ctx, 'now', t.x + t.w, t.y + t.h + 4, { size: 10, color: C.muted, align: 'right', mono: true });
   }
 
+  const COMPARE_ALGOS = ['fixed', 'log', 'counter', 'token', 'leaky'];
+  const PATTERN_LABELS = { burst: 'Dinner rush', boundary: 'Sneaky timing', steady: 'Hungry all day' };
+
+  function buildPatterns() {
+    const L = LIMIT;
+    const W = WINDOW;
+    const burstCount = Math.round(2.5 * L);
+    const steadyGap = WINDOW / LIMIT / 2;
+    return {
+      burst: {
+        desc: `${burstCount} cats in ${secs(burstCount * 50)} seconds, then 3 more wander in.`,
+        duration: 2.5 * W,
+        times: [...range(500, burstCount, 50), 1.5 * W, 1.75 * W, 2 * W],
+        insight: 'The treat jar spends its saved-up treats at once, the line at the bowl soaks up the rush and lets cats eat one by one, and the window algorithms cap it per window.',
+      },
+      boundary: {
+        desc: `${L} cats just before the ${secs(W)}s window boundary and ${L} just after.`,
+        duration: 2.25 * W,
+        times: [...spread(W - 450, W - 50, L), ...spread(W + 50, W + 450, L)],
+        insight: 'The two halves land in different fixed windows, so the fixed window counts them separately.',
+      },
+      steady: {
+        desc: `A constant ${num(2 * RATE)} cats per second, double what the rule allows.`,
+        duration: 3 * W,
+        times: range(500, Math.floor((3 * W - 500) / steadyGap), steadyGap),
+        insight: `With cats arriving nonstop, every algorithm settles near the rule's ${num(RATE)} cats per second. They differ at the start and in which cats get hissed at.`,
+      },
+    };
+  }
+
+  function overLimitSummary() {
+    const over = cmp.rows.filter((row) => row.peak > LIMIT).map((row) => ALGOS[row.key].name);
+    if (!over.length) return `Every algorithm kept the bowl at or below ${LIMIT} cats in any ${secs(WINDOW)}-second span.`;
+    const names = over.length === 1 ? over[0] : `${over.slice(0, -1).join(', ')} and ${over[over.length - 1]}`;
+    return `${names} let more than ${LIMIT} cats reach the bowl within ${secs(WINDOW)} seconds.`;
+  }
+
+  const PATTERNS = buildPatterns();
+
+  const cmp = { pattern: 'burst', now: 0, playing: false, rows: [] };
+
+  function buildCompare() {
+    const tabs = $('patterns');
+    for (const [key, label] of Object.entries(PATTERN_LABELS)) {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.setAttribute('role', 'tab');
+      b.dataset.pattern = key;
+      b.addEventListener('click', () => {
+        cmp.pattern = key;
+        resetCompare();
+      });
+      tabs.appendChild(b);
+    }
+    const container = $('compare-rows');
+    cmp.rows = COMPARE_ALGOS.map((key) => {
+      const el = document.createElement('div');
+      el.className = 'row';
+      el.innerHTML = `<span class="name">${ALGOS[key].name}</span><canvas></canvas>
+        <span class="ok"></span><span class="no"></span><span class="peak"></span><span class="wait"></span>`;
+      container.appendChild(el);
+      return { key, el, canvas: el.querySelector('canvas') };
+    });
+  }
+
+  function resetCompare() {
+    const p = PATTERNS[cmp.pattern];
+    for (const b of $('patterns').children) b.setAttribute('aria-selected', String(b.dataset.pattern === cmp.pattern));
+    $('pattern-desc').textContent = p.desc;
+    $('takeaway').textContent = '';
+    cmp.now = 0;
+    cmp.playing = true;
+    for (const row of cmp.rows) {
+      row.limiter = ALGOS[row.key].create();
+      row.results = [];
+      row.peak = 0;
+    }
+  }
+
+  function peak(times) {
+    let best = 0;
+    for (let i = 0, j = 0; i < times.length; i++) {
+      while (times[i] - times[j] >= WINDOW) j++;
+      best = Math.max(best, i - j + 1);
+    }
+    return best;
+  }
+
+  function advanceCompare(dt) {
+    if (!cmp.playing) return;
+    const p = PATTERNS[cmp.pattern];
+    cmp.now = Math.min(p.duration, cmp.now + dt);
+    for (const row of cmp.rows) {
+      while (row.results.length < p.times.length && p.times[row.results.length] <= cmp.now) {
+        const at = p.times[row.results.length];
+        const ok = row.limiter.tryAcquire(at);
+        const l = row.limiter;
+        row.results.push({ at, ok, servedAt: ok ? (l instanceof LeakyBucket ? l.pending[l.pending.length - 1] : at) : null });
+      }
+      if (row.limiter.drain) row.limiter.drain(cmp.now);
+    }
+    if (cmp.now >= p.duration) {
+      cmp.playing = false;
+      for (const row of cmp.rows) row.peak = peak(row.results.filter((r) => r.ok && r.servedAt <= cmp.now).map((r) => r.servedAt).sort((a, b) => a - b));
+      $('takeaway').textContent = `${p.insight} ${overLimitSummary()}`;
+    }
+  }
+
+  function drawCompare() {
+    const p = PATTERNS[cmp.pattern];
+    for (const row of cmp.rows) {
+      const { ctx, w, h } = fitCanvas(row.canvas);
+      const x = (t) => 6 + (t / p.duration) * (w - 12);
+      ctx.strokeStyle = C.grid;
+      ctx.setLineDash([3, 3]);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let b = WINDOW; b < p.duration; b += WINDOW) {
+        ctx.moveTo(Math.round(x(b)) + 0.5, 0);
+        ctx.lineTo(Math.round(x(b)) + 0.5, h);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (cmp.playing) {
+        ctx.fillStyle = C.shade;
+        ctx.fillRect(x(cmp.now), 0, w - x(cmp.now), h);
+      }
+
+      const dot = (t, y, color) => {
+        ctx.beginPath();
+        ctx.arc(x(t), y, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      };
+      for (const r of row.results) {
+        dot(r.at, h * (r.ok ? 0.2 : 0.5), r.ok ? C.ok : C.no);
+        if (r.ok && r.servedAt !== r.at && r.servedAt <= cmp.now) dot(r.servedAt, h * 0.8, C.out);
+      }
+
+      const served = row.results.filter((r) => r.ok && r.servedAt <= cmp.now).map((r) => r.servedAt).sort((a, b) => a - b);
+      const waits = row.results.filter((r) => r.ok).map((r) => r.servedAt - r.at);
+      const top = peak(served);
+      row.peak = top;
+      const cellsEl = row.el.children;
+      cellsEl[2].textContent = row.results.filter((r) => r.ok).length;
+      cellsEl[3].textContent = row.results.filter((r) => !r.ok).length;
+      cellsEl[4].textContent = top;
+      cellsEl[4].className = top > LIMIT ? 'hot' : '';
+      cellsEl[5].textContent = waits.length ? sec(waits.reduce((a, b) => a + b, 0) / waits.length) : '—';
+    }
+  }
+
   let current = 0;
 
   function buildNav() {
@@ -686,8 +854,16 @@
     $('lead').textContent = step.lead;
     $('lesson-body').innerHTML = lessonHtml(step);
 
-    lab.step = step;
-    resetLab();
+    for (const [id, on] of [['lab', !step.compare], ['compare', !!step.compare]]) {
+      $(id).classList.toggle('is-off', !on);
+      $(id).inert = !on;
+    }
+    if (step.compare) {
+      resetCompare();
+    } else {
+      lab.step = step;
+      resetLab();
+    }
 
     $('prev').disabled = current === 0;
     $('next').disabled = current === STEPS.length - 1;
@@ -700,6 +876,7 @@
   $('restart').addEventListener('click', resetLab);
   $('send').addEventListener('click', () => sendManual(1, 0));
   $('burst').addEventListener('click', () => sendManual(5, 80));
+  $('compare-replay').addEventListener('click', resetCompare);
   $('prev').addEventListener('click', () => goTo(current - 1));
   $('next').addEventListener('click', () => goTo(current + 1));
 
@@ -707,7 +884,7 @@
     if (e.target.closest('input, select, button, textarea')) return;
     if (e.key === 'ArrowRight') goTo(current + 1);
     else if (e.key === 'ArrowLeft') goTo(current - 1);
-    else if (e.code === 'Space') {
+    else if (e.code === 'Space' && !STEPS[current].compare) {
       e.preventDefault();
       if (!e.repeat) sendManual(1, 0);
     }
@@ -719,13 +896,19 @@
   function frame(t) {
     const dt = Math.min(100, t - last);
     last = t;
-    advanceLab(dt);
-    drawLab();
+    if (STEPS[current].compare) {
+      advanceCompare(dt);
+      drawCompare();
+    } else {
+      advanceLab(dt);
+      drawLab();
+    }
     requestAnimationFrame(frame);
   }
 
   readColors();
   buildNav();
+  buildCompare();
   goTo(Number(location.hash.slice(1)) - 1 || 0);
   requestAnimationFrame(frame);
 })();

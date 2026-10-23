@@ -184,6 +184,10 @@ h1 {
 .lesson .legend li::before { content: none; }
 .chip { position: absolute; left: 1px; top: 0.45em; width: 12px; height: 12px; border-radius: 50%; }
 
+.stage-area { display: grid; min-width: 0; }
+.stage-area > .instrument { grid-area: 1 / 1; }
+.is-off { visibility: hidden; }
+
 .instrument {
   background: var(--surface);
   border: 1px solid var(--rule);
@@ -227,6 +231,38 @@ h1 {
   padding: 10px 0 9px 12px;
   border-left: 3px solid var(--ginger);
 }
+
+.patterns { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 5px; padding: 3px; gap: 3px; }
+.patterns button { border: none; background: transparent; }
+.patterns button[aria-selected="true"] { background: var(--ink); color: var(--surface); }
+.pattern-desc { color: var(--muted); font-size: 15px; margin: 12px 0 16px; }
+.compare-table { overflow-x: auto; }
+.row {
+  display: grid;
+  grid-template-columns: 160px minmax(220px, 1fr) 72px 72px 72px 72px;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--rule);
+  font: 400 14px/1.3 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  min-width: 720px;
+}
+.row.head { font: 600 13px/1.2 var(--font-body); color: var(--muted); }
+.row > span:nth-child(n+3) { text-align: right; }
+.row .name { font: 600 15px/1.25 var(--font-body); }
+.row canvas { width: 100%; height: 44px; display: block; }
+.row .ok { color: var(--ok); }
+.row .no { color: var(--no); }
+.row .hot { color: var(--no); font-weight: 600; }
+.takeaway {
+  margin: 18px 0 0;
+  padding: 2px 0 2px 14px;
+  border-left: 3px solid var(--ginger);
+  font-size: 16px;
+  max-width: 44em;
+}
+.takeaway:empty { display: none; }
 
 .pager {
   position: sticky;
@@ -276,8 +312,14 @@ h1 {
     padding-block: clamp(16px, 3vh, 32px);
   }
   .lesson { min-height: 0; overflow: hidden; font-size: clamp(12px, 1.75vh, 16px); }
+  .stage-area { min-height: 0; }
   .instrument { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
   #stage { height: clamp(230px, 40vh, 334px); }
+  .compare-table { overflow-y: hidden; }
+  .row { padding-block: clamp(3px, 0.8vh, 9px); }
+  .row canvas { height: clamp(28px, 4.6vh, 44px); }
+  .pattern-desc { margin-block: clamp(6px, 1.2vh, 12px) clamp(8px, 1.6vh, 16px); }
+  .takeaway { font-size: clamp(13px, 1.75vh, 16px); }
   #lab .log {
     flex: 1;
     height: auto;

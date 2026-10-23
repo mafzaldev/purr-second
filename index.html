@@ -35,23 +35,41 @@
       <div id="lesson-body"></div>
     </section>
 
-    <section class="instrument" id="lab">
-      <canvas id="stage" aria-label="Animated view of cats passing through the rate limiter"></canvas>
-      <div class="transport">
-        <button id="play" class="primary">Play scenario</button>
-        <button id="restart">Restart</button>
-        <select id="speed" aria-label="Playback speed">
-          <option value="0.5">0.5×</option>
-          <option value="1" selected>1×</option>
-          <option value="2">2×</option>
-        </select>
-        <span class="spacer"></span>
-        <button id="send" title="Space">Send a cat</button>
-        <button id="burst">Stampede ×5</button>
-      </div>
-      <p class="readout" id="lab-stats"></p>
-      <ol class="log" id="narration" aria-live="polite"></ol>
-    </section>
+    <div class="stage-area">
+      <section class="instrument" id="lab">
+        <canvas id="stage" aria-label="Animated view of cats passing through the rate limiter"></canvas>
+        <div class="transport">
+          <button id="play" class="primary">Play scenario</button>
+          <button id="restart">Restart</button>
+          <select id="speed" aria-label="Playback speed">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+          </select>
+          <span class="spacer"></span>
+          <button id="send" title="Space">Send a cat</button>
+          <button id="burst">Stampede ×5</button>
+        </div>
+        <p class="readout" id="lab-stats"></p>
+        <ol class="log" id="narration" aria-live="polite"></ol>
+      </section>
+
+      <section class="instrument is-off" id="compare" inert>
+        <div class="patterns" id="patterns" role="tablist" aria-label="Traffic pattern"></div>
+        <p class="pattern-desc" id="pattern-desc"></p>
+        <div class="compare-table">
+          <div class="row head">
+            <span>Algorithm</span><span>Timeline</span><span>Fed</span><span>Hissed</span>
+            <span title="Most cats that reached the bowl in any 4-second span">Peak / 4s</span><span>Avg wait</span>
+          </div>
+          <div id="compare-rows"></div>
+        </div>
+        <div class="transport">
+          <button id="compare-replay" class="primary">Replay</button>
+        </div>
+        <p class="takeaway" id="takeaway"></p>
+      </section>
+    </div>
   </main>
 
   <footer class="pager">
