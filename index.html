@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Purr Second</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;800&family=DM+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="sign">
+    <div class="sign-inner">
+      <div class="sign-top">
+        <span class="brand">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="var(--ginger)" d="M5 4l7 6a13 13 0 0 1 8 0l7-6 1 11a12 12 0 1 1-24 0z"/><circle cx="12" cy="17" r="1.8" fill="var(--band)"/><circle cx="20" cy="17" r="1.8" fill="var(--band)"/></svg>
+          Purr Second <span class="brand-sub">rate limiting, explained with cats</span>
+        </span>
+        <div class="policy">
+          <div class="limit-sign" aria-label="Rule: 4 cats per 4 seconds">
+            <b>4</b><span>cats</span><span>per 4 s</span>
+          </div>
+        </div>
+      </div>
+      <nav class="steps" id="steps" aria-label="Steps"></nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="lesson">
+      <p class="eyebrow" id="eyebrow"></p>
+      <h1 id="title"></h1>
+      <p class="lead" id="lead"></p>
+      <div id="lesson-body"></div>
+    </section>
+
+    <section class="instrument" id="lab">
+      <canvas id="stage" aria-label="Animated view of cats passing through the rate limiter"></canvas>
+      <div class="transport">
+        <button id="play" class="primary">Play scenario</button>
+        <button id="restart">Restart</button>
+        <select id="speed" aria-label="Playback speed">
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+        </select>
+        <span class="spacer"></span>
+        <button id="send" title="Space">Send a cat</button>
+        <button id="burst">Stampede ×5</button>
+      </div>
+      <p class="readout" id="lab-stats"></p>
+      <ol class="log" id="narration" aria-live="polite"></ol>
+    </section>
+  </main>
+
+  <footer class="pager">
+    <div class="pager-inner">
+      <button id="prev">Back</button>
+      <span id="position"></span>
+      <button id="next" class="primary">Next</button>
+    </div>
+  </footer>
+
+  <script src="limiters.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
