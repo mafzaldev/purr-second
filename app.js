@@ -515,7 +515,18 @@
     return { ok: hits.filter((r) => r.ok).length, no: hits.filter((r) => !r.ok).length };
   }
 
+  function stopScenario() {
+    const unsent = lab.requests.filter((r) => !r.decided && r.at - TRAVEL > lab.now);
+    if (!unsent.length && !lab.says.length) return;
+    lab.requests = lab.requests.filter((r) => !unsent.includes(r));
+    lab.nextId = Math.max(0, ...lab.requests.map((r) => r.id)) + 1;
+    lab.says = [];
+    lab.ended = true;
+    logSay('Scenario stopped. Now only your cats are sent. Press Restart to watch the scenario again.');
+  }
+
   function sendManual(count, gap) {
+    stopScenario();
     for (let i = 0; i < count; i++) lab.requests.push({ id: lab.nextId++, at: lab.now + TRAVEL + i * gap });
     lab.requests.sort((a, b) => a.at - b.at);
     setPlaying(true);
