@@ -862,6 +862,18 @@
     return html + (step.html || '');
   }
 
+  const FIXED_LAYOUT = window.matchMedia('(min-width: 901px)');
+  function fitLesson() {
+    const lesson = document.querySelector('.lesson');
+    lesson.style.fontSize = '';
+    if (!FIXED_LAYOUT.matches) return;
+    let size = parseFloat(getComputedStyle(lesson).fontSize);
+    while (lesson.scrollHeight > lesson.clientHeight + 1 && size > 11) {
+      size -= 0.5;
+      lesson.style.fontSize = `${size}px`;
+    }
+  }
+
   function goTo(i) {
     current = Math.max(0, Math.min(STEPS.length - 1, i));
     const step = STEPS[current];
@@ -874,6 +886,7 @@
     $('title').textContent = step.title;
     $('lead').textContent = step.lead;
     $('lesson-body').innerHTML = lessonHtml(step);
+    fitLesson();
 
     for (const [id, on] of [['lab', !step.compare], ['compare', !!step.compare]]) {
       $(id).classList.toggle('is-off', !on);
@@ -970,6 +983,8 @@
   });
 
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+  window.addEventListener('resize', fitLesson);
+  document.fonts?.ready.then(fitLesson);
 
   let last = performance.now();
   function frame(t) {
