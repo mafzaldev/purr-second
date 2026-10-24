@@ -451,8 +451,11 @@
 
   function pushLog(li) {
     const list = $('narration');
+    const reading = list.scrollTop > 2;
+    const before = list.scrollHeight;
     list.prepend(li);
-    while (list.children.length > 8) list.lastChild.remove();
+    if (reading) list.scrollTop += list.scrollHeight - before;
+    while (list.children.length > 300) list.lastChild.remove();
   }
 
   function logSay(message) {
