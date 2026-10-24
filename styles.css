@@ -106,27 +106,33 @@ button:not(:disabled):active { transform: translateY(1px); }
 .brand svg { width: 30px; height: 30px; flex: none; }
 .brand-sub { font: 400 15px/1 var(--font-body); opacity: 0.7; }
 
-.policy { position: relative; display: flex; align-items: center; gap: 14px; }
+.policy { position: relative; display: flex; align-items: center; }
 .limit-sign {
-  position: relative;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  width: 64px;
-  height: 64px;
-  padding: 0;
-  border-radius: 50%;
-  border: 2px solid var(--on-ginger);
-  background: var(--ginger);
-  color: var(--on-ginger);
-  box-shadow: 0 0 0 3px var(--ginger);
-  font-family: var(--font-display);
-  line-height: 1;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--band-ink) 25%, transparent);
+  background: color-mix(in srgb, var(--band-ink) 8%, transparent);
+  color: var(--band-ink);
+  font: 600 15px/1 var(--font-body);
+  white-space: nowrap;
 }
-.limit-sign:hover:not(:disabled) { border-color: var(--on-ginger); box-shadow: 0 0 0 3px var(--ginger), 0 0 0 5px var(--band-ink); }
-.limit-sign span { font-size: 11px; font-weight: 500; }
-.limit-sign b { font-size: 24px; font-weight: 600; margin: 0 0 1px; }
+.limit-sign:hover:not(:disabled) { border-color: var(--ginger); }
+.limit-sign[aria-expanded="true"] { border-color: var(--ginger); background: color-mix(in srgb, var(--ginger) 14%, transparent); }
+.limit-sign .rule b { color: var(--ginger); font: 600 17px/1 var(--font-display); }
+.limit-sign .edit {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 12px;
+  border-left: 1px solid color-mix(in srgb, var(--band-ink) 25%, transparent);
+  font-size: 13px;
+  opacity: 0.75;
+}
+.limit-sign:hover .edit { opacity: 1; }
+.limit-sign .edit svg { width: 14px; height: 14px; }
 .policy-pop {
   position: absolute;
   right: 0;
@@ -363,6 +369,7 @@ h1 {
 
 @media (max-width: 480px) {
   .brand-sub { display: none; }
+  .limit-sign .edit { display: none; }
   .log li { grid-template-columns: 6.5ch 3.5ch minmax(0, 1fr); }
   .log li .status { grid-column: 3; }
   .log li .msg { grid-column: 1 / -1; }

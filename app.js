@@ -914,7 +914,7 @@
     STEPS = buildSteps();
     PATTERNS = buildPatterns();
     $('sign-limit').textContent = LIMIT;
-    $('sign-window').textContent = `per ${policy.windowSec} s`;
+    $('sign-window').textContent = `${policy.windowSec}s`;
     $('peak-head').textContent = `Peak / ${policy.windowSec}s`;
     $('pol-limit').textContent = LIMIT;
     $('pol-window').textContent = `${policy.windowSec} s`;
