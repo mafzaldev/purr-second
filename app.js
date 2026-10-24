@@ -833,6 +833,7 @@
     STEPS.forEach((step, i) => {
       const b = document.createElement('button');
       b.innerHTML = `<span class="n">${i + 1}</span>${step.label}`;
+      if (i === 1 || i === STEPS.length - 1) b.classList.add('group-start');
       b.addEventListener('click', () => goTo(i));
       nav.appendChild(b);
     });
