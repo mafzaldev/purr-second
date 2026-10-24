@@ -146,6 +146,7 @@
       create: () => new FixedWindow({ limit: LIMIT, windowMs: WINDOW }),
       boundaries: true,
       shade: (l, now) => [l.state(now).windowStart, now],
+      shadeLabel: () => 'this sitting',
       explain: (r, before, after) =>
         r.ok
           ? `fed · ${after.count}/${LIMIT} this sitting`
@@ -165,6 +166,7 @@
       name: 'Sliding Window Log',
       create: () => new SlidingLog({ limit: LIMIT, windowMs: WINDOW }),
       shade: (l, now) => [now - WINDOW, now],
+      shadeLabel: () => `counted: last ${secs(WINDOW)}s`,
       explain: (r, before, after) =>
         r.ok
           ? `noted · ${after.log.length} cat${after.log.length === 1 ? '' : 's'} in the last ${secs(WINDOW)}s`
@@ -190,6 +192,7 @@
       create: () => new SlidingWindowCounter({ limit: LIMIT, windowMs: WINDOW }),
       boundaries: true,
       shade: (l, now) => [now - WINDOW, now],
+      shadeLabel: () => `counted: last ${secs(WINDOW)}s`,
       explain(r, b) {
         const math = `${b.prevCount} × ${b.weight.toFixed(2)} + ${b.currCount} = ${b.estimate.toFixed(2)}`;
         return r.ok
@@ -650,6 +653,7 @@
       const [a, b] = lab.algo.shade(lab.limiter, now);
       ctx.fillStyle = C.shade;
       ctx.fillRect(Math.max(plotX, x(a)), t.y, x(b) - Math.max(plotX, x(a)), t.h - 10);
+      if (x(b) - x(a) > 70) text(ctx, lab.algo.shadeLabel(), Math.max(plotX, x(a)) + 6, t.y + t.h - 16, { size: 10, color: C.muted, mono: true });
     }
     if (lab.algo.boundaries) {
       ctx.strokeStyle = C.grid;
