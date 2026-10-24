@@ -18,8 +18,28 @@
           Purr Second <span class="brand-sub">rate limiting, explained with cats</span>
         </span>
         <div class="policy">
-          <div class="limit-sign" aria-label="Rule: 4 cats per 4 seconds">
-            <b>4</b><span>cats</span><span>per 4 s</span>
+          <button class="limit-sign" id="policy-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="policy-pop" title="Change how many cats get through">
+            <b id="sign-limit">4</b><span>cats</span><span id="sign-window">per 4 s</span>
+          </button>
+          <div class="policy-pop" id="policy-pop" role="dialog" aria-label="Change the feeding rule" hidden>
+            <p class="pop-title">Feeding rule</p>
+            <div class="stepper">
+              <span>Cats</span>
+              <div class="stepper-ctl">
+                <button type="button" data-key="limit" data-step="-1" aria-label="Fewer cats">−</button>
+                <output id="pol-limit">4</output>
+                <button type="button" data-key="limit" data-step="1" aria-label="More cats">+</button>
+              </div>
+            </div>
+            <div class="stepper">
+              <span>Per window of</span>
+              <div class="stepper-ctl">
+                <button type="button" data-key="windowSec" data-step="-1" aria-label="Shorter window">−</button>
+                <output id="pol-window">4 s</output>
+                <button type="button" data-key="windowSec" data-step="1" aria-label="Longer window">+</button>
+              </div>
+            </div>
+            <p class="pop-note">Applies to every step and restarts the current one.</p>
           </div>
         </div>
       </div>
@@ -60,7 +80,7 @@
         <div class="compare-table">
           <div class="row head">
             <span>Algorithm</span><span>Timeline</span><span>Fed</span><span>Hissed</span>
-            <span title="Most cats that reached the bowl in any 4-second span">Peak / 4s</span><span>Avg wait</span>
+            <span id="peak-head" title="Most cats that reached the bowl in any one window">Peak / 4s</span><span>Avg wait</span>
           </div>
           <div id="compare-rows"></div>
         </div>

@@ -2,10 +2,12 @@
   const { FixedWindow, SlidingLog, SlidingWindowCounter, TokenBucket, LeakyBucket } = window.RateLimiters;
   const $ = (id) => document.getElementById(id);
 
-  const LIMIT = 4;
-  const WINDOW = 4000;
-  const RATE = LIMIT / (WINDOW / 1000);
-  const TIMELINE_SPAN = 3 * WINDOW;
+  const POLICY_RANGE = { limit: [2, 8], windowSec: [2, 8] };
+  const POLICY_KEY = 'rate-limiter-policy';
+  let LIMIT = 4;
+  let WINDOW = 4000;
+  let RATE = 1;
+  let TIMELINE_SPAN = 12000;
 
   const TRAVEL = 300;
   const EXIT = 500;
@@ -291,7 +293,7 @@
         lead: 'Every cat wants dinner right now. A rate limiter sits between the cats (your clients) and the food bowl (your API): it lets some through and hisses 429 Too Many Cats at the rest.',
         html: `
           <p>In real systems each cat is a request. Without a rate limiter, one greedy client can empty the bowl and leave nothing for anyone else.</p>
-          <p>Every algorithm here follows the rule on the tag above: <b>${L} cats per ${secs(W)} seconds</b>.</p>
+          <p>Every algorithm here follows the rule on the tag above: <b>${L} cats per ${secs(W)} seconds</b>. Click the tag to change it.</p>
           <h3>How to use it</h3>
           <p>Press <b>Play scenario</b> to watch a short narrated run, then send your own cats with <b>Space</b>. Use the arrow keys to move between steps.</p>
           <h3>Legend</h3>
@@ -443,7 +445,7 @@
     ];
   }
 
-  const STEPS = buildSteps();
+  let STEPS = buildSteps();
 
   const lab = { step: null, algo: null, limiter: null, now: 0, playing: false, requests: [], says: [], nextId: 1, scriptEnd: 0, ended: false, ok: 0, no: 0, signal: null };
 
@@ -706,7 +708,7 @@
     return `${names} let more than ${LIMIT} cats reach the bowl within ${secs(WINDOW)} seconds.`;
   }
 
-  const PATTERNS = buildPatterns();
+  let PATTERNS = buildPatterns();
 
   const cmp = { pattern: 'burst', now: 0, playing: false, rows: [] };
 
@@ -872,6 +874,59 @@
     window.scrollTo({ top: 0 });
   }
 
+  const policy = { limit: LIMIT, windowSec: WINDOW / 1000 };
+
+  function loadPolicy() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(POLICY_KEY) || 'null');
+      for (const key of Object.keys(POLICY_RANGE)) {
+        const [lo, hi] = POLICY_RANGE[key];
+        if (Number.isInteger(saved?.[key]) && saved[key] >= lo && saved[key] <= hi) policy[key] = saved[key];
+      }
+    } catch {
+    }
+  }
+
+  function applyPolicy() {
+    LIMIT = policy.limit;
+    WINDOW = policy.windowSec * 1000;
+    RATE = LIMIT / policy.windowSec;
+    TIMELINE_SPAN = 3 * WINDOW;
+    STEPS = buildSteps();
+    PATTERNS = buildPatterns();
+    $('sign-limit').textContent = LIMIT;
+    $('sign-window').textContent = `per ${policy.windowSec} s`;
+    $('peak-head').textContent = `Peak / ${policy.windowSec}s`;
+    $('pol-limit').textContent = LIMIT;
+    $('pol-window').textContent = `${policy.windowSec} s`;
+    for (const b of document.querySelectorAll('.stepper button')) {
+      const [lo, hi] = POLICY_RANGE[b.dataset.key];
+      const next = policy[b.dataset.key] + Number(b.dataset.step);
+      b.disabled = next < lo || next > hi;
+    }
+    try {
+      localStorage.setItem(POLICY_KEY, JSON.stringify(policy));
+    } catch {
+    }
+  }
+
+  function togglePolicy(open) {
+    $('policy-pop').hidden = !open;
+    $('policy-btn').setAttribute('aria-expanded', String(open));
+  }
+
+  $('policy-btn').addEventListener('click', () => togglePolicy($('policy-pop').hidden));
+  for (const b of document.querySelectorAll('.stepper button')) {
+    b.addEventListener('click', () => {
+      policy[b.dataset.key] += Number(b.dataset.step);
+      applyPolicy();
+      goTo(current);
+    });
+  }
+  document.addEventListener('click', (e) => {
+    if (!$('policy-pop').hidden && !e.target.closest('.policy')) togglePolicy(false);
+  });
+
   $('play').addEventListener('click', () => setPlaying(!lab.playing));
   $('restart').addEventListener('click', resetLab);
   $('send').addEventListener('click', () => sendManual(1, 0));
@@ -881,6 +936,11 @@
   $('next').addEventListener('click', () => goTo(current + 1));
 
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('policy-pop').hidden) {
+      togglePolicy(false);
+      $('policy-btn').focus();
+      return;
+    }
     if (e.target.closest('input, select, button, textarea')) return;
     if (e.key === 'ArrowRight') goTo(current + 1);
     else if (e.key === 'ArrowLeft') goTo(current - 1);
@@ -907,6 +967,8 @@
   }
 
   readColors();
+  loadPolicy();
+  applyPolicy();
   buildNav();
   buildCompare();
   goTo(Number(location.hash.slice(1)) - 1 || 0);

@@ -122,9 +122,33 @@ button:not(:disabled):active { transform: translateY(1px); }
   box-shadow: 0 0 0 3px var(--ginger);
   font-family: var(--font-display);
   line-height: 1;
+  cursor: pointer;
 }
+.limit-sign:hover:not(:disabled) { border-color: var(--on-ginger); box-shadow: 0 0 0 3px var(--ginger), 0 0 0 5px var(--band-ink); }
 .limit-sign span { font-size: 11px; font-weight: 500; }
 .limit-sign b { font-size: 24px; font-weight: 600; margin: 0 0 1px; }
+.policy-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  z-index: 5;
+  width: 260px;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.policy-pop[hidden] { display: none; }
+.pop-title { margin: 0; font-weight: 800; }
+.pop-note { margin: 0; font-size: 13px; color: var(--muted); }
+.stepper { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.stepper-ctl { display: flex; align-items: center; gap: 6px; }
+.stepper-ctl button { width: 32px; height: 32px; padding: 0; font-size: 18px; }
+.stepper-ctl output { min-width: 3.5ch; text-align: center; font: 600 15px/1 var(--font-mono); font-variant-numeric: tabular-nums; }
 
 .steps { display: flex; gap: 2px; margin-top: 10px; overflow-x: auto; scrollbar-width: none; }
 .steps button {
