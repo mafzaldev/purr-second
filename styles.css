@@ -301,11 +301,21 @@ h1 {
 .log .status.no { color: var(--no); }
 .log .status.queued { color: var(--on-ginger); background: var(--ginger); padding: 1px 4px 0; border-radius: 3px; justify-self: start; font-size: 11px; }
 .log li.say {
-  display: block;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
   font: 600 15px/1.45 var(--font-body);
   color: var(--ink);
-  padding: 10px 0 9px 12px;
-  border-left: 3px solid var(--ginger);
+  padding: 10px 0 9px;
+}
+.log li.say::before,
+.takeaway::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  background: var(--ginger);
+  mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path fill-rule='evenodd' d='M5 4l7 6a13 13 0 0 1 8 0l7-6 1 11a12 12 0 1 1-24 0zM10.2 17a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0zM18.2 17a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0z'/></svg>") center / contain no-repeat;
 }
 
 .patterns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--rule); border-radius: 999px; padding: 3px; gap: 3px; }
@@ -332,12 +342,15 @@ h1 {
 .row .no { color: var(--no); }
 .row .hot { color: var(--no); font-weight: 600; }
 .takeaway {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
   margin: 18px 0 0;
-  padding: 2px 0 2px 14px;
-  border-left: 3px solid var(--ginger);
   font-size: 16px;
   max-width: 44em;
 }
+.takeaway::before { margin-top: 2px; }
 .takeaway:empty { display: none; }
 
 .pager {
