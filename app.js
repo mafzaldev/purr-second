@@ -719,11 +719,49 @@
     };
   }
 
-  function overLimitSummary() {
-    const over = cmp.rows.filter((row) => row.peak > LIMIT).map((row) => ALGOS[row.key].name);
-    if (!over.length) return `Every algorithm kept the bowl at or below ${LIMIT} cats in any ${secs(WINDOW)}-second span.`;
-    const names = over.length === 1 ? over[0] : `${over.slice(0, -1).join(', ')} and ${over[over.length - 1]}`;
-    return `${names} let more than ${LIMIT} cats reach the bowl within ${secs(WINDOW)} seconds.`;
+  const listNames = (names) => (names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`);
+
+  function resultFacts() {
+    const rows = cmp.rows.map((row) => ({ ...row, name: ALGOS[row.key].name }));
+    const window = `${secs(WINDOW)}s`;
+    const over = rows.filter((row) => row.peak > LIMIT);
+    const within = rows.filter((row) => row.peak <= LIMIT);
+    const facts = [];
+    if (over.length) {
+      facts.push(['over', `Over the limit: ${listNames(over.map((row) => `${row.name} (${row.peak} in ${window})`))}.`]);
+      facts.push(['ok', `Within the limit: ${listNames(within.map((row) => row.name))}.`]);
+    } else {
+      facts.push(['ok', `Every algorithm stayed within ${LIMIT} cats per ${window}.`]);
+    }
+    const most = Math.max(...rows.map((row) => row.fed));
+    const top = rows.filter((row) => row.fed === most);
+    const wait = Math.max(...top.map((row) => row.wait));
+    facts.push(['info', `Fed the most: ${listNames(top.map((row) => row.name))}, ${most} cats` + (wait >= 50 ? `, but they waited ${sec(wait)} on average.` : '.')]);
+    const least = Math.min(...rows.map((row) => row.fed));
+    const others = rows.filter((row) => row.fed !== most);
+    if (others.length && others.every((row) => row.fed === least)) {
+      const count = ['', 'one', 'two', 'three', 'four'][others.length];
+      facts.push(['info', others.length === 1 ? `${others[0].name} fed ${least}.` : `The other ${count} fed ${least} each.`]);
+    } else if (least !== most) {
+      facts.push(['info', `Fed the fewest: ${listNames(rows.filter((row) => row.fed === least).map((row) => row.name))}, ${least} cats.`]);
+    }
+    return facts;
+  }
+
+  function showResults(insight) {
+    const body = document.createElement('div');
+    const lead = document.createElement('p');
+    lead.textContent = insight;
+    const list = document.createElement('ul');
+    for (const [kind, text] of resultFacts()) {
+      const li = document.createElement('li');
+      li.className = kind;
+      li.textContent = text;
+      list.appendChild(li);
+    }
+    body.append(lead, list);
+    $('takeaway').replaceChildren(body);
+    shrinkToFit($('takeaway'), $('compare'));
   }
 
   let PATTERNS = buildPatterns();
@@ -794,8 +832,13 @@
     if (cmp.now >= p.duration) {
       cmp.playing = false;
       $('compare-skip').disabled = true;
-      for (const row of cmp.rows) row.peak = peak(row.results.filter((r) => r.ok && r.servedAt <= cmp.now).map((r) => r.servedAt).sort((a, b) => a - b));
-      $('takeaway').textContent = `${p.insight} ${overLimitSummary()}`;
+      for (const row of cmp.rows) {
+        const fed = row.results.filter((r) => r.ok);
+        row.peak = peak(fed.filter((r) => r.servedAt <= cmp.now).map((r) => r.servedAt).sort((a, b) => a - b));
+        row.fed = fed.length;
+        row.wait = fed.length ? fed.reduce((sum, r) => sum + r.servedAt - r.at, 0) / fed.length : 0;
+      }
+      showResults(p.insight);
     }
   }
 
@@ -865,15 +908,19 @@
   }
 
   const FIXED_LAYOUT = window.matchMedia('(min-width: 901px)');
-  function fitLesson() {
-    const lesson = document.querySelector('.lesson');
-    lesson.style.fontSize = '';
+  function shrinkToFit(textEl, container = textEl) {
+    textEl.style.fontSize = '';
     if (!FIXED_LAYOUT.matches) return;
-    let size = parseFloat(getComputedStyle(lesson).fontSize);
-    while (lesson.scrollHeight > lesson.clientHeight + 1 && size > 11) {
+    let size = parseFloat(getComputedStyle(textEl).fontSize);
+    while (container.scrollHeight > container.clientHeight + 1 && size > 11) {
       size -= 0.5;
-      lesson.style.fontSize = `${size}px`;
+      textEl.style.fontSize = `${size}px`;
     }
+  }
+
+  function fitLesson() {
+    shrinkToFit(document.querySelector('.lesson'));
+    if (STEPS[current]?.compare) shrinkToFit($('takeaway'), $('compare'));
   }
 
   function goTo(i) {

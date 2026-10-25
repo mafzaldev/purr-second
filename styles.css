@@ -325,14 +325,14 @@ h1 {
 .compare-table { overflow-x: auto; }
 .row {
   display: grid;
-  grid-template-columns: 160px minmax(220px, 1fr) 72px 72px 72px 72px;
+  grid-template-columns: 190px minmax(220px, 1fr) 72px 72px 72px 72px;
   gap: 12px;
   align-items: center;
   padding: 9px 0;
   border-bottom: 1px solid var(--rule);
   font: 400 14px/1.3 var(--font-mono);
   font-variant-numeric: tabular-nums;
-  min-width: 720px;
+  min-width: 750px;
 }
 .row.head { font: 600 13px/1.2 var(--font-body); color: var(--muted); }
 .row > span:nth-child(n+3) { text-align: right; }
@@ -346,11 +346,18 @@ h1 {
   grid-template-columns: 20px minmax(0, 1fr);
   gap: 10px;
   align-items: start;
-  margin: 18px 0 0;
+  margin: 14px 0 0;
   font-size: 16px;
   max-width: 44em;
 }
 .takeaway::before { margin-top: 2px; }
+.takeaway p { margin: 0 0 8px; }
+.takeaway ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.875em; color: var(--muted); }
+.takeaway li { position: relative; padding-left: 16px; }
+.takeaway li::before { content: ""; position: absolute; left: 2px; top: 0.6em; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.takeaway li.over { color: var(--ink); }
+.takeaway li.over::before { background: var(--no); }
+.takeaway li.ok::before { background: var(--ok); }
 .takeaway:empty { display: none; }
 
 .pager {
@@ -405,11 +412,12 @@ h1 {
   .stage-area { min-height: 0; }
   .instrument { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
   #stage { height: clamp(230px, 40vh, 334px); }
-  .compare-table { overflow-y: hidden; }
-  .row { padding-block: clamp(3px, 0.8vh, 9px); }
-  .row canvas { height: clamp(28px, 4.6vh, 44px); }
+  .compare-table { overflow-y: hidden; flex: none; }
+  .row { padding-block: clamp(2px, 0.6vh, 9px); }
+  .row canvas { height: clamp(24px, 3.8vh, 44px); }
   .pattern-desc { margin-block: clamp(6px, 1.2vh, 12px) clamp(8px, 1.6vh, 16px); }
-  .takeaway { font-size: clamp(13px, 1.75vh, 16px); }
+  .takeaway { font-size: clamp(13px, 1.75vh, 16px); margin-top: clamp(8px, 1.6vh, 14px); }
+  #compare .transport { margin-top: clamp(8px, 1.5vh, 14px); }
   #lab .log {
     flex: 1;
     height: auto;
