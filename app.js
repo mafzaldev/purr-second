@@ -650,11 +650,25 @@
     logSay("Scenario stopped. Now only your requests are sent. Press Restart to watch the scenario again.");
   }
 
+  const ACHIEVEMENT_AT = 50;
+  const achievement = { sent: 0, unlocked: false };
+
+  function countSent(count) {
+    achievement.sent += count;
+    if (achievement.unlocked || achievement.sent < ACHIEVEMENT_AT) return;
+    achievement.unlocked = true;
+    const toast = $("toast");
+    toast.innerHTML = `<div><b>Achievement unlocked</b><span>Accidental DDoS: you sent ${ACHIEVEMENT_AT} requests</span></div>`;
+    toast.hidden = false;
+    setTimeout(() => (toast.hidden = true), 4500);
+  }
+
   function sendManual(count, gap) {
     stopScenario();
     for (let i = 0; i < count; i++) lab.requests.push({ id: lab.nextId++, at: lab.now + TRAVEL + i * gap });
     lab.requests.sort((a, b) => a.at - b.at);
     setPlaying(true);
+    countSent(count);
   }
 
   function advanceLab(dt) {
@@ -716,6 +730,7 @@
     if (!small) text(ctx, lab.algo.name, lim.x + 12, lim.y + 21, { size: 12, weight: 600, color: C.muted });
     lab.algo.draw(ctx, { x: lim.x + 14, y: lim.y + 34, w: lim.w - 28, h: lim.h - 44 }, lab.limiter, now, lab.requests);
 
+    lab.watcher = { x: dropX, y: midY - 15 - 22 };
     drawWatcher(ctx, dropX, midY - 15 - 22, now);
     text(ctx, "429 Too Many Requests · hiss!", lim.x, binY - 20, { size: 11, weight: 600, color: C.no, mono: true });
 
@@ -740,11 +755,59 @@
     drawTimeline(ctx, { x: 14, y: 246, w: w - 28, h: 70 }, now);
   }
 
+  const poke = { limiter: new SlidingLog({ limit: 3, windowMs: 2000 }), at: -Infinity, ok: true };
+  const POKE_SHOW = 1200;
+
+  function pokeWatcher() {
+    const t = performance.now();
+    poke.ok = poke.limiter.tryAcquire(t);
+    poke.at = t;
+  }
+
+  function overWatcher(e) {
+    const rect = $("stage").getBoundingClientRect();
+    const k = rect.height / STAGE_H;
+    const p = lab.watcher;
+    return p && Math.hypot((e.clientX - rect.left) / k - p.x, (e.clientY - rect.top) / k - p.y) < 24;
+  }
+
+  function drawPokeBubble(ctx, x, y, ok) {
+    const label = ok ? "purr" : "429 Too Many Pokes";
+    ctx.font = `600 12px ${MONO}`;
+    const w = ctx.measureText(label).width + 20;
+    box(ctx, x + 18, y - 40, w, 24, { fill: C.card, stroke: ok ? C.border : C.no, radius: 12 });
+    text(ctx, label, x + 28, y - 27, { size: 12, weight: 600, color: ok ? C.text : C.no, baseline: "middle", mono: true });
+  }
+
   function drawWatcher(ctx, x, y, now) {
-    const cat = CATS[isDarkTheme() ? "white" : "black"];
+    const dark = isDarkTheme();
+    const cat = CATS[dark ? "white" : "black"];
     const size = (30 / 24) * 32;
+    const since = performance.now() - poke.at;
+    const poked = since < POKE_SHOW;
+    const shake = poked && !poke.ok ? Math.sin(since / 18) * 3 * (1 - since / POKE_SHOW) : 0;
+    x += shake;
     if (catReady(cat)) ctx.drawImage(cat, x - size / 2, y - size / 2, size, size);
-    if (lab.signal && now - lab.signal.at < 600) {
+    if (poked) {
+      for (const dx of [-5.5, 5.5]) {
+        ctx.beginPath();
+        ctx.ellipse(x + dx, y + 2, 3, 3.6, 0, 0, Math.PI * 2);
+        ctx.fillStyle = dark ? "#f4f1f6" : "#2a2630";
+        ctx.fill();
+        ctx.beginPath();
+        if (poke.ok) {
+          ctx.arc(x + dx, y + 3.5, 2.6, Math.PI * 1.1, Math.PI * 1.9);
+          ctx.strokeStyle = dark ? "#2a2630" : "#e8c547";
+          ctx.lineWidth = 1.6;
+          ctx.stroke();
+        } else {
+          ctx.ellipse(x + dx, y + 2, 2.6, 3.2, 0, 0, Math.PI * 2);
+          ctx.fillStyle = C.no;
+          ctx.fill();
+        }
+      }
+      drawPokeBubble(ctx, x, y, poke.ok);
+    } else if (lab.signal && now - lab.signal.at < 600) {
       for (const dx of [-5.5, 5.5]) {
         ctx.beginPath();
         ctx.ellipse(x + dx, y + 2, 2.6, 3.2, 0, 0, Math.PI * 2);
@@ -1142,6 +1205,12 @@
 
   $("play").addEventListener("click", () => setPlaying(!lab.playing));
   $("restart").addEventListener("click", resetLab);
+  $("stage").addEventListener("click", (e) => {
+    if (overWatcher(e)) pokeWatcher();
+  });
+  $("stage").addEventListener("mousemove", (e) => {
+    $("stage").style.cursor = overWatcher(e) ? "pointer" : "";
+  });
   $("send").addEventListener("click", () => sendManual(1, 0));
   $("burst").addEventListener("click", () => sendManual(5, 80));
   $("compare-replay").addEventListener("click", resetCompare);
@@ -1175,6 +1244,10 @@
 
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readColors);
   window.addEventListener("resize", fitLesson);
+  const TITLE = document.title;
+  document.addEventListener("visibilitychange", () => {
+    document.title = document.hidden ? "Come back, the cats miss you" : TITLE;
+  });
   document.fonts?.ready.then(fitLesson);
 
   let last = performance.now();
