@@ -19,18 +19,18 @@
           Purr Second <span class="brand-sub">rate limiting, explained with cats</span>
         </span>
         <div class="policy">
-          <button class="limit-sign" id="policy-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="policy-pop" title="Change how many cats get through">
-            <span class="rule"><b id="sign-limit">4</b> cats per <b id="sign-window">4s</b></span>
+          <button class="limit-sign" id="policy-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="policy-pop" title="Change the rate limit">
+            <span class="rule"><b id="sign-limit">4</b> requests per <b id="sign-window">4sec</b></span>
             <span class="edit"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 2.5l2 2L6 12l-2.8.8L4 10z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Change</span>
           </button>
-          <div class="policy-pop" id="policy-pop" role="dialog" aria-label="Change the feeding rule" hidden>
-            <p class="pop-title">Feeding rule</p>
+          <div class="policy-pop" id="policy-pop" role="dialog" aria-label="Change the rate limit" hidden>
+            <p class="pop-title">Rate limit</p>
             <div class="stepper">
-              <span>Cats</span>
+              <span>Requests</span>
               <div class="stepper-ctl">
-                <button type="button" data-key="limit" data-step="-1" aria-label="Fewer cats">−</button>
+                <button type="button" data-key="limit" data-step="-1" aria-label="Fewer requests">−</button>
                 <output id="pol-limit">4</output>
-                <button type="button" data-key="limit" data-step="1" aria-label="More cats">+</button>
+                <button type="button" data-key="limit" data-step="1" aria-label="More requests">+</button>
               </div>
             </div>
             <div class="stepper">
@@ -59,7 +59,7 @@
 
     <div class="stage-area">
       <section class="instrument" id="lab">
-        <canvas id="stage" aria-label="Animated view of cats passing through the rate limiter"></canvas>
+        <canvas id="stage" aria-label="Animated view of requests passing through the rate limiter"></canvas>
         <div class="transport">
           <button id="play" class="primary">Play scenario</button>
           <button id="restart">Restart</button>
@@ -69,8 +69,8 @@
             <option value="2">2×</option>
           </select>
           <span class="spacer"></span>
-          <button id="send" title="Space">Send a cat</button>
-          <button id="burst">Stampede ×5</button>
+          <button id="send" title="Space">Send request</button>
+          <button id="burst">Burst ×5</button>
         </div>
         <p class="readout" id="lab-stats"></p>
         <ol class="log" id="narration" aria-live="polite" aria-label="Event log" tabindex="0"></ol>
@@ -81,8 +81,8 @@
         <p class="pattern-desc" id="pattern-desc"></p>
         <div class="compare-table">
           <div class="row head">
-            <span>Algorithm</span><span>Timeline</span><span>Fed</span><span>Hissed</span>
-            <span id="peak-head" title="Most cats that reached the bowl in any one window">Peak / 4s</span><span>Avg wait</span>
+            <span>Algorithm</span><span>Timeline</span><span>Accepted</span><span>Rejected</span>
+            <span id="peak-head" title="Most requests that reached the API in any one window">Peak / 4s</span><span>Avg wait</span>
           </div>
           <div id="compare-rows"></div>
         </div>

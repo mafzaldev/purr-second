@@ -136,9 +136,9 @@
     none: {
       name: 'No limiter',
       create: () => ({ tryAcquire: () => true }),
-      explain: () => 'no limiter, straight to the bowl',
+      explain: () => 'no limiter, sent straight through',
       draw(ctx, r) {
-        bigStat(ctx, r, 'No limiter', 'every cat goes straight to the bowl');
+        bigStat(ctx, r, 'No limiter', 'every request goes straight to the API');
       },
     },
 
@@ -147,19 +147,19 @@
       create: () => new FixedWindow({ limit: LIMIT, windowMs: WINDOW }),
       boundaries: true,
       shade: (l, now) => [l.state(now).windowStart, now],
-      shadeLabel: () => 'this sitting',
+      shadeLabel: () => 'this window',
       explain: (r, before, after) =>
         r.ok
-          ? `fed · ${after.count}/${LIMIT} this sitting`
-          : `sitting full ${LIMIT}/${LIMIT} · Retry-After ${sec(after.resetsIn)}`,
+          ? `counter ${after.count}/${LIMIT} in this window`
+          : `window full ${LIMIT}/${LIMIT} · Retry-After ${sec(after.resetsIn)}`,
       draw(ctx, r, l, now) {
         const s = l.state(now);
-        bigStat(ctx, r, `${s.count} / ${LIMIT}`, 'cats fed this sitting');
+        bigStat(ctx, r, `${s.count} / ${LIMIT}`, 'requests counted in this window');
         cells(ctx, r.x, r.y + 56, r.w, 18, LIMIT, (i) => ({ fill: i < s.count ? C.accent : C.track }));
         box(ctx, r.x, r.y + 88, r.w, 6, { fill: C.track, radius: 3 });
         box(ctx, r.x, r.y + 88, r.w * (1 - s.resetsIn / WINDOW), 6, { fill: C.accent, radius: 3 });
         const from = s.windowStart / 1000;
-        text(ctx, `sitting ${from}–${from + WINDOW / 1000}s · next sitting in ${sec(s.resetsIn)}`, r.x + r.w / 2, r.y + 112, { size: 11, color: C.muted, align: 'center', mono: true, maxWidth: r.w });
+        text(ctx, `window ${from}–${from + WINDOW / 1000}s · resets in ${sec(s.resetsIn)}`, r.x + r.w / 2, r.y + 112, { size: 11, color: C.muted, align: 'center', mono: true, maxWidth: r.w });
       },
     },
 
@@ -170,11 +170,11 @@
       shadeLabel: () => `counted: last ${secs(WINDOW)}s`,
       explain: (r, before, after) =>
         r.ok
-          ? `noted · ${after.log.length} cat${after.log.length === 1 ? '' : 's'} in the last ${secs(WINDOW)}s`
-          : `notebook full ${LIMIT}/${LIMIT} · Retry-After ${sec(before.log[0] + WINDOW - r.at)}`,
+          ? `${after.log.length} timestamp${after.log.length === 1 ? '' : 's'} logged in the last ${secs(WINDOW)}s`
+          : `log full ${LIMIT}/${LIMIT} · Retry-After ${sec(before.log[0] + WINDOW - r.at)}`,
       draw(ctx, r, l, now, requests) {
         const s = l.state(now);
-        bigStat(ctx, r, `${s.log.length} / ${LIMIT}`, `cats in the notebook, last ${secs(WINDOW)} seconds`);
+        bigStat(ctx, r, `${s.log.length} / ${LIMIT}`, `timestamps in the last ${secs(WINDOW)} seconds`);
         box(ctx, r.x, r.y + 54, r.w, 30, { fill: C.shade, radius: 6 });
         for (const t of s.log) {
           const req = requests.find((q) => q.ok && q.at === t);
@@ -183,7 +183,7 @@
         text(ctx, `−${secs(WINDOW)}s`, r.x, r.y + 98, { size: 10, color: C.muted, mono: true });
         text(ctx, 'now', r.x + r.w, r.y + 98, { size: 10, color: C.muted, align: 'right', mono: true });
         if (s.log.length >= LIMIT) {
-          text(ctx, `full · oldest entry expires in ${sec(s.log[0] + WINDOW - now)}`, r.x + r.w / 2, r.y + 118, { size: 11, color: C.muted, align: 'center', mono: true, maxWidth: r.w });
+          text(ctx, `full · oldest expires in ${sec(s.log[0] + WINDOW - now)}`, r.x + r.w / 2, r.y + 118, { size: 11, color: C.muted, align: 'center', mono: true, maxWidth: r.w });
         }
       },
     },
@@ -197,22 +197,22 @@
       explain(r, b) {
         const math = `${b.prevCount} × ${b.weight.toFixed(2)} + ${b.currCount} = ${b.estimate.toFixed(2)}`;
         return r.ok
-          ? `estimate ${math}, room for 1 more`
-          : `estimate ${math}, no room under ${LIMIT}`;
+          ? `estimate ${math}, +1 fits under ${LIMIT}`
+          : `estimate ${math}, +1 would exceed ${LIMIT}`;
       },
       draw(ctx, r, l, now) {
         const s = l.state(now);
         const half = (r.w - 16) / 2;
         const narrow = r.w < 260;
         text(ctx, `${narrow ? 'prev' : 'previous'} × ${s.weight.toFixed(2)}`, r.x, r.y + 8, { size: narrow ? 10 : 11, color: C.muted, mono: true, maxWidth: half });
-        text(ctx, narrow ? 'current' : 'current sitting', r.x + half + 16, r.y + 8, { size: narrow ? 10 : 11, color: C.muted, mono: true, maxWidth: half });
+        text(ctx, narrow ? 'current' : 'current window', r.x + half + 16, r.y + 8, { size: narrow ? 10 : 11, color: C.muted, mono: true, maxWidth: half });
         const weighted = s.prevCount * s.weight;
         cells(ctx, r.x, r.y + 16, half, 18, LIMIT, (i) =>
           i < s.prevCount ? { fill: C.accent, alpha: Math.min(1, Math.max(0.25, weighted - i)) } : { fill: C.track });
         cells(ctx, r.x + half + 16, r.y + 16, half, 18, LIMIT, (i) => ({ fill: i < s.currCount ? C.accent : C.track }));
         text(ctx, `${s.prevCount} × ${s.weight.toFixed(2)} + ${s.currCount}`, r.x + r.w / 2, r.y + 62, { size: 13, color: C.muted, align: 'center', mono: true, maxWidth: r.w });
         text(ctx, `= ${s.estimate.toFixed(2)} / ${LIMIT}`, r.x + r.w / 2, r.y + 90, { size: 26, weight: 600, align: 'center', display: true });
-        text(ctx, `estimated cats in the last ${secs(WINDOW)} seconds`, r.x + r.w / 2, r.y + 108, { size: 11, color: C.muted, align: 'center', mono: true, maxWidth: r.w });
+        text(ctx, `estimated requests in the last ${secs(WINDOW)} seconds`, r.x + r.w / 2, r.y + 108, { size: 11, color: C.muted, align: 'center', mono: true, maxWidth: r.w });
       },
     },
 
@@ -221,11 +221,11 @@
       create: () => new TokenBucket({ capacity: LIMIT, refillPerSec: RATE }),
       explain: (r, before, after) =>
         r.ok
-          ? `took a treat · ${after.tokens.toFixed(1)} left`
-          : `${before.tokens.toFixed(1)} treats, needs 1 · Retry-After ${sec(((1 - before.tokens) / RATE) * 1000)}`,
+          ? `spent 1 token · ${after.tokens.toFixed(1)} left`
+          : `${before.tokens.toFixed(1)} tokens, needs 1 · Retry-After ${sec(((1 - before.tokens) / RATE) * 1000)}`,
       draw(ctx, r, l, now) {
         const s = l.state(now);
-        bigStat(ctx, r, `${s.tokens.toFixed(1)} / ${LIMIT}`, 'treats in the jar');
+        bigStat(ctx, r, `${s.tokens.toFixed(1)} / ${LIMIT}`, 'tokens in the bucket');
         const bw = Math.min(r.w, LIMIT * 32 + 16);
         const bx = r.x + (r.w - bw) / 2;
         const by = r.y + 52;
@@ -242,7 +242,7 @@
           const fill = Math.min(1, Math.max(0, s.tokens - i));
           fish(ctx, bx + 8 + step * (i + 0.5), by + 22, Math.min(12, step / 2 - 2), fill > 0 ? C.warn : C.track, fill > 0 ? 0.25 + 0.75 * fill : 1);
         }
-        text(ctx, `+${num(RATE)} treat${RATE === 1 ? '' : 's'} per second · each cat takes 1`, r.x + r.w / 2, r.y + 118, { size: 11, color: C.muted, align: 'center', mono: true, maxWidth: r.w });
+        text(ctx, `+${num(RATE)} token${RATE === 1 ? '' : 's'} per second · each request spends 1`, r.x + r.w / 2, r.y + 118, { size: 11, color: C.muted, align: 'center', mono: true, maxWidth: r.w });
       },
     },
 
@@ -250,18 +250,18 @@
       name: 'Leaky Bucket',
       create: () => new LeakyBucket({ capacity: LIMIT, leakPerSec: RATE }),
       explain(r, before, after) {
-        if (!r.ok) return `line full ${LIMIT}/${LIMIT}`;
-        if (r.processAt === r.at) return 'bowl free, ate straight away';
-        return `${after.queued}/${LIMIT} in line · eats in ${sec(r.processAt - r.at)}`;
+        if (!r.ok) return `queue full ${LIMIT}/${LIMIT}`;
+        if (r.processAt === r.at) return 'queue empty, sent straight through';
+        return `${after.queued}/${LIMIT} waiting · leaves in ${sec(r.processAt - r.at)}`;
       },
       draw(ctx, r, l, now, requests) {
         const waiting = requests.filter((q) => q.ok && q.processAt > now).sort((a, b) => b.processAt - a.processAt);
-        bigStat(ctx, r, `${waiting.length} / ${LIMIT}`, 'cats waiting in line');
+        bigStat(ctx, r, `${waiting.length} / ${LIMIT}`, 'requests waiting in the queue');
         const pad = LIMIT - waiting.length;
         cells(ctx, r.x, r.y + 54, r.w, 30, LIMIT, (i) =>
           i < pad ? { fill: C.track } : { fill: C.warn, label: `#${waiting[i - pad].id}` });
         const next = waiting.length ? waiting[waiting.length - 1].processAt - now : null;
-        text(ctx, `${num(RATE)} ${RATE === 1 ? 'cat eats' : 'cats eat'} per second →` + (next !== null ? ` next up in ${sec(next)}` : ''), r.x + r.w / 2, r.y + 108, { size: 11, color: C.muted, align: 'center', mono: true, maxWidth: r.w });
+        text(ctx, `drains ${num(RATE)} per second →` + (next !== null ? ` next out in ${sec(next)}` : ''), r.x + r.w / 2, r.y + 108, { size: 11, color: C.muted, align: 'center', mono: true, maxWidth: r.w });
       },
     },
   };
@@ -276,7 +276,7 @@
     const attack = [2 * W - 600, 2 * W + 600];
     const attackResult = (c, extra) => {
       const { ok } = c(...attack);
-      return `${ok} of the ${2 * L} sneaky cats got fed. ${extra}`;
+      return `${ok} of the ${2 * L} boundary requests were accepted. ${extra}`;
     };
 
     const introCount = 3 * L;
@@ -293,24 +293,24 @@
         label: 'Intro',
         algo: 'none',
         eyebrow: 'Introduction',
-        title: 'Why ration the cats?',
-        lead: 'Every cat wants dinner right now. A rate limiter sits between the cats (your clients) and the food bowl (your API): it lets some through and hisses 429 Too Many Cats at the rest.',
+        title: 'Why rate limit?',
+        lead: 'A rate limiter sits between clients and your API. For every request it decides whether to let it through or answer 429 Too Many Requests.',
         html: `
-          <p>In real systems each cat is a request. Without a rate limiter, one greedy client can empty the bowl and leave nothing for anyone else.</p>
-          <p>Every algorithm here follows the rule on the tag above: <b>${L} cats per ${secs(W)} seconds</b>. Click the tag to change it.</p>
+          <p>Without one, a single busy client can flood the API and starve everyone else. On the stage, each cat is one request.</p>
+          <p>Every algorithm here enforces the rule in the header: <b>${L} requests per ${secs(W)} seconds</b>. Click it to change it.</p>
           <h3>How to use it</h3>
-          <p>Press <b>Play scenario</b> to watch a short narrated run, then send your own cats with <b>Space</b>. Use the arrow keys to move between steps.</p>
+          <p>Press <b>Play scenario</b> to watch a short narrated run, then send your own requests with <b>Space</b>. Use the arrow keys to move between steps.</p>
           <h3>Legend</h3>
           <ul class="legend">
-            <li><span class="chip" style="background:var(--fill)"></span>cat on its way</li>
-            <li><span class="chip" style="background:var(--ok)"></span>fed, reached the bowl</li>
-            <li><span class="chip" style="background:var(--no)"></span>hissed away (429)</li>
-            <li><span class="chip" style="background:var(--ginger)"></span>waiting its turn</li>
+            <li><span class="chip" style="background:var(--fill)"></span>request on its way</li>
+            <li><span class="chip" style="background:var(--ok)"></span>accepted, reaches the API</li>
+            <li><span class="chip" style="background:var(--no)"></span>rejected with 429</li>
+            <li><span class="chip" style="background:var(--ginger)"></span>waiting in a queue</li>
           </ul>`,
         scenario: [
-          say(200, `${introCount} hungry cats come running in about ${secs(introCount * 100)} seconds…`),
+          say(200, `A client fires ${introCount} requests in about ${secs(introCount * 100)} seconds…`),
           ...reqs(...range(500, introCount, 100)),
-          say(introEnd + 800, `With no limiter all ${introCount} pile onto the bowl at once. That's an API with no rate limit.`),
+          say(introEnd + 800, `Without a limiter all ${introCount} hit the API at once. One noisy client can hog it.`),
         ],
       },
       {
@@ -318,23 +318,23 @@
         algo: 'fixed',
         eyebrow: 'Algorithm 1 of 5',
         title: 'Fixed Window',
-        lead: 'Dinner is served in fixed sittings. Each sitting feeds a set number of cats, and the count starts over at the next sitting.',
+        lead: 'The simplest approach: count requests in fixed blocks of time and reset the count when a new block starts.',
         how: [
-          `Time is cut into sittings (windows): 0–${secs(W)}s, ${secs(W)}–${secs(2 * W)}s, and so on.`,
-          `Each sitting has a counter. A cat gets in while the counter is below ${L}.`,
-          'When the next sitting starts, the counter resets to 0.',
+          `Time is cut into windows: 0–${secs(W)}s, ${secs(W)}–${secs(2 * W)}s, and so on.`,
+          `Each window has a counter. A request is allowed while the counter is below ${L}.`,
+          'When the next window starts, the counter resets to 0.',
         ],
         pros: ['One counter per client: tiny memory', 'Very fast and easy to implement'],
-        cons: [`Up to ${2 * L} cats can sneak in around a change of sitting`],
+        cons: [`Up to ${2 * L} requests can slip through around a window boundary`],
         scenario: [
-          say(200, `${L + 1} cats show up during the first sitting…`),
+          say(200, `${L + 1} requests arrive in the first window…`),
           ...reqs(...first),
-          say(W + 100, (c) => `The first sitting fed ${c(0, W).ok} and hissed at ${c(0, W).no}. At ${secs(W)}s a new sitting starts and the counter drops back to 0.`),
-          say(2 * W - 1000, `Now the loophole. Watch ${L} cats slip in just before the sitting changes at ${secs(2 * W)}s…`),
+          say(W + 100, (c) => `The first window accepted ${c(0, W).ok} and rejected ${c(0, W).no}. At ${secs(W)}s a new window starts and the counter drops back to 0.`),
+          say(2 * W - 1000, `Now the weak spot. Watch ${L} requests just before the boundary at ${secs(2 * W)}s…`),
           ...reqs(...before),
-          say(2 * W, `…and ${L} more right after it.`),
+          say(2 * W, `…and ${L} more just after it.`),
           ...reqs(...after),
-          say(2 * W + 1200, (c) => attackResult(c, 'Each half lands in a different sitting, so each is counted separately. This is the boundary burst problem.')),
+          say(2 * W + 1200, (c) => attackResult(c, 'They land in two different windows, so each half is counted separately. This is the boundary burst problem.')),
         ],
       },
       {
@@ -342,22 +342,22 @@
         algo: 'log',
         eyebrow: 'Algorithm 2 of 5',
         title: 'Sliding Window Log',
-        lead: 'A cat-sitter writes down exactly when every cat ate, and only lets a cat in if the last few seconds of the notebook have room.',
+        lead: 'Fixes the boundary problem by remembering exactly when each recent request happened.',
         how: [
-          'Write the time of every cat that gets fed in a notebook (the log).',
-          `When a cat arrives, cross out entries older than ${secs(W)} seconds.`,
-          `If fewer than ${L} entries remain, let it in and write it down.`,
+          'Keep a log with the timestamp of every accepted request.',
+          `On each request, drop timestamps older than ${secs(W)} seconds.`,
+          `If fewer than ${L} remain, accept and add the new timestamp.`,
         ],
-        pros: [`Exact: never more than ${L} cats in any ${secs(W)}-second span`, 'No sneaking in at a change of sitting'],
-        cons: ['One notebook entry per cat, so memory grows with the limit'],
+        pros: [`Exact: never more than ${L} in any ${secs(W)}-second span`, 'No boundary bursts'],
+        cons: ['Stores a timestamp per request, so memory grows with the limit'],
         scenario: [
-          say(200, `Same cats as the fixed window. First, ${L + 1} of them…`),
+          say(200, `Same traffic as the fixed window. First, ${L + 1} requests…`),
           ...reqs(...first),
-          say(W + 100, `No fresh sitting at ${secs(W)}s. The window slides, so each entry expires exactly ${secs(W)}s after it was written.`),
+          say(W + 100, `No reset at ${secs(W)}s. The window slides, so each timestamp expires exactly ${secs(W)}s after it was logged.`),
           ...reqs(Math.round(1.2 * W)),
-          say(2 * W - 1000, 'Now the same sneaky cats that fooled the fixed window…'),
+          say(2 * W - 1000, 'Now the same boundary burst that beat the fixed window…'),
           ...reqs(...before, ...after),
-          say(2 * W + 1200, (c) => attackResult(c, `The notebook never lets more than ${L} through in any ${secs(W)}-second span.`)),
+          say(2 * W + 1200, (c) => attackResult(c, `The log never lets more than ${L} through in any ${secs(W)}-second span.`)),
         ],
       },
       {
@@ -365,22 +365,22 @@
         algo: 'counter',
         eyebrow: 'Algorithm 3 of 5',
         title: 'Sliding Window Counter',
-        lead: 'A lazier cat-sitter keeps just two tallies, this sitting and the last one, and blends them into a good guess.',
+        lead: 'A cheap approximation of the sliding log, using only two counters.',
         how: [
-          'Keep a tally for the previous sitting and one for the current sitting.',
-          `Weight the previous tally by how much of it still falls inside the last ${secs(W)} seconds.`,
-          `Estimate = previous × weight + current. Let a cat in if the estimate + 1 ≤ ${L}.`,
+          'Keep counters for the previous and the current fixed window.',
+          `Weight the previous count by how much of it still overlaps the last ${secs(W)} seconds.`,
+          `Estimate = previous × weight + current. Accept if the estimate + 1 ≤ ${L}.`,
         ],
-        pros: ['Two tallies per client: tiny memory', 'Smooths out the sneaking at a change of sitting'],
-        cons: ['A guess: it assumes last sitting\'s cats arrived evenly'],
+        pros: ['Two counters per client: tiny memory', 'Smooths out boundary bursts'],
+        cons: ['An approximation: assumes requests were spread evenly across the previous window'],
         scenario: [
-          say(200, `${L} cats fill the first sitting, and the next one gets hissed at.`),
+          say(200, `${L} requests fill the first window, and the next one is rejected.`),
           ...reqs(...first),
-          say(W + 100, `A new sitting starts, but the previous ${L} still count, fading out as they slide out of view.`),
+          say(W + 100, `A new window starts, but the previous ${L} still count, scaled down as they slide out of view.`),
           ...reqs(...[1.2, 1.3, 1.45].map((f) => Math.round(f * W))),
-          say(2 * W - 1000, 'Here come the sneaky cats again…'),
+          say(2 * W - 1000, 'Now the boundary burst again…'),
           ...reqs(...before, ...after),
-          say(2 * W + 1200, (c) => attackResult(c, `The fixed window fed all ${2 * L}; the blended tally keeps it to ${L} or fewer.`)),
+          say(2 * W + 1200, (c) => attackResult(c, `The fixed window let all ${2 * L} through; the weighted estimate keeps it to ${L} or fewer.`)),
         ],
       },
       {
@@ -388,24 +388,24 @@
         algo: 'token',
         eyebrow: 'Algorithm 4 of 5',
         title: 'Token Bucket',
-        lead: 'A treat jar sits by the door. Each cat takes a treat to get in, and the jar slowly refills, so saved-up treats allow a quick rush.',
+        lead: 'Requests spend tokens from a bucket that refills at a steady rate. Saved-up tokens allow short bursts.',
         how: [
-          `The jar (bucket) holds up to ${L} treats (tokens) and starts full.`,
-          `Treats are added at ${num(RATE)} per second, up to the cap.`,
-          'Each cat takes one treat. No whole treat means it gets hissed at.',
+          `The bucket holds up to ${L} tokens and starts full.`,
+          `Tokens are added at ${num(RATE)} per second, up to the cap.`,
+          'Each request takes one token. No whole token means it is rejected.',
         ],
-        pros: ['Allows short rushes while holding the average rate', 'Two numbers per client: treats left + last refill time'],
-        cons: [`A full jar lets ${L} cats through at once`],
+        pros: ['Allows short bursts while enforcing the average rate', 'Two numbers per client: tokens + last refill time'],
+        cons: [`A full bucket lets ${L} requests through at once`],
         scenario: [
-          say(200, `The jar starts full with ${L} treats.`),
+          say(200, `The bucket starts full with ${L} tokens.`),
           ...reqs(...range(800, L + 2, 30)),
-          say(tokenBurstEnd + 600, (c) => `A rush of ${L + 2} cats: ${c(800, tokenBurstEnd).ok} grabbed saved-up treats at once and ${c(800, tokenBurstEnd).no} got hissed at.`),
+          say(tokenBurstEnd + 600, (c) => `A burst of ${L + 2}: ${c(800, tokenBurstEnd).ok} spent saved-up tokens at once and ${c(800, tokenBurstEnd).no} were rejected.`),
           ...reqs(...range(steadyAt, 3, u)),
-          say(steadyAt + 0.5 * u + 300, `Treats trickle back at ${num(RATE)} per second, so one cat every ${secs(u)}s always gets in.`),
-          say(steadyAt + 2 * u + 600, 'Now the cats nap for a while and the jar refills…'),
-          say(refillAt - 400, '…so the next rush gets in again.'),
+          say(steadyAt + 0.5 * u + 300, `Tokens trickle back at ${num(RATE)} per second, so one request every ${secs(u)}s keeps passing.`),
+          say(steadyAt + 2 * u + 600, 'Now the client goes quiet and the bucket refills…'),
+          say(refillAt - 400, '…so the next burst is allowed again.'),
           ...reqs(...range(refillAt, L + 1, 60)),
-          say(refillAt + (L + 1) * 60 + 700, (c) => `${c(refillAt, refillAt + L * 60).ok} of ${L + 1} got in this time.`),
+          say(refillAt + (L + 1) * 60 + 700, (c) => `${c(refillAt, refillAt + L * 60).ok} of ${L + 1} were accepted this time.`),
         ],
       },
       {
@@ -413,20 +413,20 @@
         algo: 'leaky',
         eyebrow: 'Algorithm 5 of 5',
         title: 'Leaky Bucket',
-        lead: 'Cats line up at the bowl and eat one at a time, at a steady pace. The bowl never gets crowded.',
+        lead: 'Requests wait in a queue that drains at a constant rate. The API sees perfectly smooth traffic.',
         how: [
-          `Cats that get in join a line (queue) with room for ${L}.`,
-          `One cat from the front eats every ${secs(u)}s.`,
-          'If the line is full, newcomers get hissed at.',
+          `Accepted requests join a queue with room for ${L}.`,
+          `The queue sends one request to the API every ${secs(u)}s.`,
+          'If the queue is full, new requests are rejected.',
         ],
-        pros: ['Perfectly even load on the bowl', 'Absorbs a rush instead of turning it away'],
-        cons: ['Cats in line have to wait', 'A long line means stale requests'],
+        pros: ['Perfectly even load on the API', 'Absorbs bursts instead of rejecting them'],
+        cons: ['Queued requests are delayed', 'A long queue means stale requests'],
         scenario: [
-          say(200, `A rush of ${L + 2} cats arrives…`),
+          say(200, `A burst of ${L + 2} arrives…`),
           ...reqs(...range(800, L + 2, 60)),
-          say(burstEnd + 600, (c) => `${c(800, burstEnd).ok} got in line and ${c(800, burstEnd).no} got hissed at. Nobody stampedes the bowl.`),
-          say(burstEnd + 600 + Math.max(1000, 1.5 * u), `Watch the bowl: cats eat exactly ${secs(u)}s apart, however they arrived.`),
-          say(drainedAt, 'A calm bowl protects a fragile backend, but every cat in line paid for it in waiting time.'),
+          say(burstEnd + 600, (c) => `${c(800, burstEnd).ok} accepted into the queue and ${c(800, burstEnd).no} rejected. The API doesn't see the burst.`),
+          say(burstEnd + 600 + Math.max(1000, 1.5 * u), `Watch the API side: requests leave exactly ${secs(u)}s apart, however they arrived.`),
+          say(drainedAt, 'Smooth output protects a fragile backend, but every queued request paid for it in waiting time.'),
           ...reqs(drainedAt + 800, drainedAt + 1000, drainedAt + 1200),
         ],
       },
@@ -435,15 +435,15 @@
         compare: true,
         eyebrow: 'Wrap-up',
         title: 'All five algorithms at once',
-        lead: 'The same cats, sent through all five algorithms side by side. Pick a pattern to see how each one copes.',
+        lead: 'The same traffic, sent through all five algorithms side by side. Pick a pattern to see how each one copes.',
         html: `
           <h3>Which one should I use?</h3>
           <ul>
-            <li><b>Token bucket</b>: the usual default for APIs. Allows rushes and is cheap.</li>
+            <li><b>Token bucket</b>: the usual default for APIs. Allows bursts and is cheap.</li>
             <li><b>Sliding window counter</b>: strict "N per window" limits with little memory.</li>
             <li><b>Sliding log</b>: when you need exact limits and the limit is small.</li>
             <li><b>Leaky bucket</b>: when the backend needs a steady flow and waiting is fine.</li>
-            <li><b>Fixed window</b>: when simplicity matters more than sneaky cats at a boundary.</li>
+            <li><b>Fixed window</b>: when simplicity matters more than boundary bursts.</li>
           </ul>`,
       },
     ];
@@ -526,7 +526,7 @@
     lab.nextId = Math.max(0, ...lab.requests.map((r) => r.id)) + 1;
     lab.says = [];
     lab.ended = true;
-    logSay('Scenario stopped. Now only your cats are sent. Press Restart to watch the scenario again.');
+    logSay('Scenario stopped. Now only your requests are sent. Press Restart to watch the scenario again.');
   }
 
   function sendManual(count, gap) {
@@ -545,7 +545,7 @@
       if (!r.decided) decide(r);
       if (r.processAt > r.at && !r.leftQueue && r.processAt <= now) {
         r.leftQueue = true;
-        logEntry(r.processAt, r.id, '200', `ate after waiting ${sec(r.processAt - r.at)}`);
+        logEntry(r.processAt, r.id, '200', `left the queue after waiting ${sec(r.processAt - r.at)}`);
       }
     }
     while (lab.says.length && lab.says[0].at <= now) {
@@ -555,7 +555,7 @@
     if (lab.limiter.drain) lab.limiter.drain(now);
     if (!lab.ended && now >= lab.scriptEnd) {
       lab.ended = true;
-      logSay('Scenario done. Your turn: send your own cats (Space) and watch how the limiter reacts.');
+      logSay('Scenario done. Your turn: send your own requests (Space) and watch how the limiter reacts.');
     }
     lab.requests = lab.requests.filter((r) => !r.decided || r.at > now - TIMELINE_SPAN - 1000 || r.processAt > now - EXIT);
   }
@@ -587,16 +587,16 @@
 
     const landed = lab.requests.some((r) => r.ok && now - ((r.processAt ?? r.at) + EXIT) >= 0 && now - ((r.processAt ?? r.at) + EXIT) < 200);
     box(ctx, client.x + 1, client.y, client.w - 2, client.h, { stroke: C.border, fill: C.card, radius: 4 });
-    text(ctx, 'Cats', client.x + side / 2, midY + 5, { size: 15, weight: 600, align: 'center', display: true });
+    text(ctx, 'Client', client.x + side / 2, midY + 5, { size: 15, weight: 600, align: 'center', display: true });
     box(ctx, server.x + 1, server.y, server.w - 2, server.h, { stroke: landed ? C.ok : C.border, fill: C.card, radius: 4 });
-    text(ctx, 'Bowl', server.x + side / 2, midY + 5, { size: 15, weight: 600, align: 'center', display: true, color: landed ? C.ok : C.text });
+    text(ctx, 'API', server.x + side / 2, midY + 5, { size: 15, weight: 600, align: 'center', display: true, color: landed ? C.ok : C.text });
 
     box(ctx, lim.x, lim.y, lim.w, lim.h, { stroke: C.text, fill: C.card, radius: 6 });
     if (!small) text(ctx, lab.algo.name, lim.x + 12, lim.y + 21, { size: 12, weight: 600, color: C.muted });
     lab.algo.draw(ctx, { x: lim.x + 14, y: lim.y + 34, w: lim.w - 28, h: lim.h - 44 }, lab.limiter, now, lab.requests);
 
     drawWatcher(ctx, dropX, midY - 15 - 22, now);
-    text(ctx, '429 Too Many Cats · hiss!', lim.x, binY - 20, { size: 11, weight: 600, color: C.no, mono: true });
+    text(ctx, '429 Too Many Requests · hiss!', lim.x, binY - 20, { size: 11, weight: 600, color: C.no, mono: true });
 
     for (const r of lab.requests) {
       if (now < r.at - TRAVEL) continue;
@@ -639,7 +639,7 @@
       ctx.fillStyle = color;
       ctx.fill();
     }
-    $('lab-stats').textContent = `t = ${sec(now)} · ${lab.ok} fed · ${lab.no} hissed at`;
+    $('lab-stats').textContent = `t = ${sec(now)} · ${lab.ok} accepted · ${lab.no} rejected`;
   }
 
   function drawTimeline(ctx, t, now) {
@@ -669,10 +669,10 @@
       ctx.setLineDash([]);
     }
 
-    text(ctx, 'fed', t.x, rows.ok + 4, { size: 10, color: C.muted, mono: true });
-    text(ctx, 'hiss', t.x, rows.no + 4, { size: 10, color: C.muted, mono: true });
+    text(ctx, '200', t.x, rows.ok + 4, { size: 10, color: C.muted, mono: true });
+    text(ctx, '429', t.x, rows.no + 4, { size: 10, color: C.muted, mono: true });
     const leaky = lab.limiter instanceof LeakyBucket;
-    if (leaky) text(ctx, 'ate', t.x, rows.out + 4, { size: 10, color: C.muted, mono: true });
+    if (leaky) text(ctx, '→API', t.x, rows.out + 4, { size: 10, color: C.muted, mono: true });
 
     const dot = (time, y, color) => {
       if (time < from) return;
@@ -691,7 +691,7 @@
   }
 
   const COMPARE_ALGOS = ['fixed', 'log', 'counter', 'token', 'leaky'];
-  const PATTERN_LABELS = { burst: 'Dinner rush', boundary: 'Sneaky timing', steady: 'Hungry all day' };
+  const PATTERN_LABELS = { burst: 'Sudden burst', boundary: 'Boundary burst', steady: 'Steady overload' };
 
   function buildPatterns() {
     const L = LIMIT;
@@ -700,22 +700,22 @@
     const steadyGap = WINDOW / LIMIT / 2;
     return {
       burst: {
-        desc: `${burstCount} cats in ${secs(burstCount * 50)} seconds, then 3 more wander in.`,
+        desc: `${burstCount} requests in ${secs(burstCount * 50)} seconds, then 3 more spread out.`,
         duration: 2.5 * W,
         times: [...range(500, burstCount, 50), 1.5 * W, 1.75 * W, 2 * W],
-        insight: 'The treat jar spends its saved-up treats at once, the line at the bowl soaks up the rush and lets cats eat one by one, and the window algorithms cap it per window.',
+        insight: 'The token bucket spends its saved-up tokens at once, the leaky bucket queues the burst and sends it on one by one, and the window algorithms cap it per window.',
       },
       boundary: {
-        desc: `${L} cats just before the ${secs(W)}s window boundary and ${L} just after.`,
+        desc: `${L} requests just before the ${secs(W)}s window boundary and ${L} just after.`,
         duration: 2.25 * W,
         times: [...spread(W - 450, W - 50, L), ...spread(W + 50, W + 450, L)],
         insight: 'The two halves land in different fixed windows, so the fixed window counts them separately.',
       },
       steady: {
-        desc: `A constant ${num(2 * RATE)} cats per second, double what the rule allows.`,
+        desc: `A constant ${num(2 * RATE)} requests per second, double what the rule allows.`,
         duration: 3 * W,
         times: range(500, Math.floor((3 * W - 500) / steadyGap), steadyGap),
-        insight: `With cats arriving nonstop, every algorithm settles near the rule's ${num(RATE)} cats per second. They differ at the start and in which cats get hissed at.`,
+        insight: `Under sustained overload, every algorithm settles near the rule's ${num(RATE)} request${RATE === 1 ? '' : 's'} per second. They differ at the start and in which requests get rejected.`,
       },
     };
   }
@@ -732,19 +732,19 @@
       facts.push(['over', `Over the limit: ${listNames(over.map((row) => `${row.name} (${row.peak} in ${window})`))}.`]);
       facts.push(['ok', `Within the limit: ${listNames(within.map((row) => row.name))}.`]);
     } else {
-      facts.push(['ok', `Every algorithm stayed within ${LIMIT} cats per ${window}.`]);
+      facts.push(['ok', `Every algorithm stayed within ${LIMIT} requests per ${window}.`]);
     }
-    const most = Math.max(...rows.map((row) => row.fed));
-    const top = rows.filter((row) => row.fed === most);
+    const most = Math.max(...rows.map((row) => row.accepted));
+    const top = rows.filter((row) => row.accepted === most);
     const wait = Math.max(...top.map((row) => row.wait));
-    facts.push(['info', `Fed the most: ${listNames(top.map((row) => row.name))}, ${most} cats` + (wait >= 50 ? `, but they waited ${sec(wait)} on average.` : '.')]);
-    const least = Math.min(...rows.map((row) => row.fed));
-    const others = rows.filter((row) => row.fed !== most);
-    if (others.length && others.every((row) => row.fed === least)) {
+    facts.push(['info', `Accepted the most: ${listNames(top.map((row) => row.name))}, ${most} requests` + (wait >= 50 ? `, but they waited ${sec(wait)} on average.` : '.')]);
+    const least = Math.min(...rows.map((row) => row.accepted));
+    const others = rows.filter((row) => row.accepted !== most);
+    if (others.length && others.every((row) => row.accepted === least)) {
       const count = ['', 'one', 'two', 'three', 'four'][others.length];
-      facts.push(['info', others.length === 1 ? `${others[0].name} fed ${least}.` : `The other ${count} fed ${least} each.`]);
+      facts.push(['info', others.length === 1 ? `${others[0].name} accepted ${least}.` : `The other ${count} accepted ${least} each.`]);
     } else if (least !== most) {
-      facts.push(['info', `Fed the fewest: ${listNames(rows.filter((row) => row.fed === least).map((row) => row.name))}, ${least} cats.`]);
+      facts.push(['info', `Accepted the fewest: ${listNames(rows.filter((row) => row.accepted === least).map((row) => row.name))}, ${least} requests.`]);
     }
     return facts;
   }
@@ -834,10 +834,10 @@
       cmp.playing = false;
       $('compare-skip').disabled = true;
       for (const row of cmp.rows) {
-        const fed = row.results.filter((r) => r.ok);
-        row.peak = peak(fed.filter((r) => r.servedAt <= cmp.now).map((r) => r.servedAt).sort((a, b) => a - b));
-        row.fed = fed.length;
-        row.wait = fed.length ? fed.reduce((sum, r) => sum + r.servedAt - r.at, 0) / fed.length : 0;
+        const accepted = row.results.filter((r) => r.ok);
+        row.peak = peak(accepted.filter((r) => r.servedAt <= cmp.now).map((r) => r.servedAt).sort((a, b) => a - b));
+        row.accepted = accepted.length;
+        row.wait = accepted.length ? accepted.reduce((sum, r) => sum + r.servedAt - r.at, 0) / accepted.length : 0;
       }
       showResults(p.insight);
     }
