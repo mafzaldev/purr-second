@@ -4,6 +4,7 @@
 
   const POLICY_RANGE = { limit: [2, 8], windowSec: [2, 8] };
   const POLICY_KEY = 'rate-limiter-policy';
+  const COMPARE_SPEED_KEY = 'rate-limiter-compare-speed';
   let LIMIT = 4;
   let WINDOW = 4000;
   let RATE = 1;
@@ -1013,6 +1014,17 @@
   $('send').addEventListener('click', () => sendManual(1, 0));
   $('burst').addEventListener('click', () => sendManual(5, 80));
   $('compare-replay').addEventListener('click', resetCompare);
+  try {
+    const saved = localStorage.getItem(COMPARE_SPEED_KEY);
+    if ([...$('compare-speed').options].some((o) => o.value === saved)) $('compare-speed').value = saved;
+  } catch {
+  }
+  $('compare-speed').addEventListener('change', () => {
+    try {
+      localStorage.setItem(COMPARE_SPEED_KEY, $('compare-speed').value);
+    } catch {
+    }
+  });
   $('compare-skip').addEventListener('click', () => advanceCompare(Infinity));
   $('prev').addEventListener('click', () => goTo(current - 1));
   $('next').addEventListener('click', () => goTo(current + 1));
