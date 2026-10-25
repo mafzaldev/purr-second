@@ -17,6 +17,7 @@
   const sec = (ms) => `${(Math.max(0, ms) / 1000).toFixed(1)}s`;
   const num = (x) => String(Number(x.toFixed(2)));
   const secs = (ms) => num(ms / 1000);
+  const seconds = (ms) => `${secs(ms)} second${ms === 1000 ? '' : 's'}`;
   const lerp = (a, b, p) => a + (b - a) * Math.min(1, Math.max(0, p));
   const reqs = (...times) => times.map((at) => ({ at }));
   const say = (at, text) => ({ at, say: text });
@@ -308,7 +309,7 @@
             <li><span class="chip" style="background:var(--ginger)"></span>waiting in a queue</li>
           </ul>`,
         scenario: [
-          say(200, `A client fires ${introCount} requests in about ${secs(introCount * 100)} seconds…`),
+          say(200, `A client fires ${introCount} requests in about ${seconds(introCount * 100)}…`),
           ...reqs(...range(500, introCount, 100)),
           say(introEnd + 800, `Without a limiter all ${introCount} hit the API at once. One noisy client can hog it.`),
         ],
@@ -700,7 +701,7 @@
     const steadyGap = WINDOW / LIMIT / 2;
     return {
       burst: {
-        desc: `${burstCount} requests in ${secs(burstCount * 50)} seconds, then 3 more spread out.`,
+        desc: `${burstCount} requests in ${seconds(burstCount * 50)}, then 3 more spread out.`,
         duration: 2.5 * W,
         times: [...range(500, burstCount, 50), 1.5 * W, 1.75 * W, 2 * W],
         insight: 'The token bucket spends its saved-up tokens at once, the leaky bucket queues the burst and sends it on one by one, and the window algorithms cap it per window.',
@@ -977,10 +978,10 @@
     STEPS = buildSteps();
     PATTERNS = buildPatterns();
     $('sign-limit').textContent = LIMIT;
-    $('sign-window').textContent = `${policy.windowSec}s`;
+    $('sign-window').textContent = `${policy.windowSec}sec`;
     $('peak-head').textContent = `Peak / ${policy.windowSec}s`;
     $('pol-limit').textContent = LIMIT;
-    $('pol-window').textContent = `${policy.windowSec} s`;
+    $('pol-window').textContent = `${policy.windowSec}s`;
     for (const b of document.querySelectorAll('.stepper button')) {
       const [lo, hi] = POLICY_RANGE[b.dataset.key];
       const next = policy[b.dataset.key] + Number(b.dataset.step);
