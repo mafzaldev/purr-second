@@ -608,9 +608,10 @@
     lab.ok = 0;
     lab.no = 0;
     lab.ended = false;
+    lab.stopped = false;
     lab.signal = null;
     const byTime = [...step.scenario].sort((a, b) => a.at - b.at);
-    lab.requests = byTime.filter((e) => !e.say).map((e) => ({ id: lab.nextId++, at: e.at }));
+    lab.requests = byTime.filter((e) => !e.say).map((e) => ({ id: lab.nextId++, at: e.at, scripted: true }));
     lab.says = byTime.filter((e) => e.say);
     lab.scriptEnd = Math.max(...step.scenario.map((e) => e.at)) + 1500;
     $("narration").innerHTML = "";
@@ -637,8 +638,10 @@
   }
 
   function stopScenario() {
-    const unsent = lab.requests.filter((r) => !r.decided && r.at - TRAVEL > lab.now);
+    if (lab.stopped) return;
+    const unsent = lab.requests.filter((r) => r.scripted && !r.decided && r.at - TRAVEL > lab.now);
     if (!unsent.length && !lab.says.length) return;
+    lab.stopped = true;
     lab.requests = lab.requests.filter((r) => !unsent.includes(r));
     lab.nextId = Math.max(0, ...lab.requests.map((r) => r.id)) + 1;
     lab.says = [];
