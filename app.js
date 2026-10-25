@@ -38,6 +38,7 @@
     shade: "shade",
     grid: "grid",
     card: "surface",
+    page: "bg",
   };
   const SANS = '"Nunito", system-ui, -apple-system, "Segoe UI", sans-serif';
   const MONO = '"DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace';
@@ -735,7 +736,8 @@
       }
     }
 
-    drawTimeline(ctx, { x: 0, y: 248, w, h: 74 }, now);
+    box(ctx, 0.75, 236, w - 1.5, 95, { fill: C.page, stroke: C.border, radius: 10 });
+    drawTimeline(ctx, { x: 14, y: 246, w: w - 28, h: 70 }, now);
   }
 
   function drawWatcher(ctx, x, y, now) {
@@ -760,7 +762,6 @@
     const x = (time) => plotX + ((time - from) / TIMELINE_SPAN) * plotW;
     const rows = { ok: t.y + 14, no: t.y + 34, out: t.y + 54 };
 
-    box(ctx, t.x, t.y - 6, t.w, 1, { fill: C.border, radius: 0 });
     if (lab.algo.shade) {
       const [a, b] = lab.algo.shade(lab.limiter, now);
       ctx.fillStyle = C.shade;
@@ -1111,6 +1112,7 @@
     $("peak-head").textContent = `Peak / ${policy.windowSec}s`;
     $("pol-limit").textContent = LIMIT;
     $("pol-window").textContent = `${policy.windowSec}s`;
+    $("pol-summary").textContent = `${LIMIT} requests every ${policy.windowSec} seconds`;
     for (const b of document.querySelectorAll(".stepper button")) {
       const [lo, hi] = POLICY_RANGE[b.dataset.key];
       const next = policy[b.dataset.key] + Number(b.dataset.step);

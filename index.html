@@ -24,41 +24,46 @@
             Purr Second <span class="brand-sub">a visual guide to rate limiting</span>
           </span>
           <div class="policy">
-            <button
-              class="limit-sign"
-              id="policy-btn"
-              type="button"
-              aria-haspopup="dialog"
-              aria-expanded="false"
-              aria-controls="policy-pop"
-              title="Change the rate limit"
-            >
-              <span class="rule"><b id="sign-limit">4</b> <span class="rule-unit">requests </span>per <b id="sign-window">4sec</b></span>
-              <span class="edit"
-                ><svg viewBox="0 0 16 16" aria-hidden="true">
-                  <path d="M11.5 2.5l2 2L6 12l-2.8.8L4 10z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /></svg
-                >Change</span
+            <div class="policy-anchor">
+              <button
+                class="limit-sign"
+                id="policy-btn"
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded="false"
+                aria-controls="policy-pop"
+                title="Change the rate limit"
               >
-            </button>
-            <div class="policy-pop" id="policy-pop" role="dialog" aria-label="Change the rate limit" hidden>
-              <p class="pop-title">Rate limit</p>
-              <div class="stepper">
-                <span>Requests</span>
-                <div class="stepper-ctl">
-                  <button type="button" data-key="limit" data-step="-1" aria-label="Fewer requests">−</button>
-                  <output id="pol-limit">4</output>
-                  <button type="button" data-key="limit" data-step="1" aria-label="More requests">+</button>
+                <span class="rule"><b id="sign-limit">4</b> <span class="rule-unit">requests </span>per <b id="sign-window">4sec</b></span>
+                <span class="edit"
+                  ><svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M11.5 2.5l2 2L6 12l-2.8.8L4 10z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /></svg
+                  >Change</span
+                >
+              </button>
+              <div class="policy-pop" id="policy-pop" role="dialog" aria-label="Change the rate limit" hidden>
+                <div class="pop-head">
+                  <p class="pop-title">Rate limit</p>
+                  <p class="pop-summary" id="pol-summary">4 requests every 4 seconds</p>
                 </div>
-              </div>
-              <div class="stepper">
-                <span>Per window of</span>
-                <div class="stepper-ctl">
-                  <button type="button" data-key="windowSec" data-step="-1" aria-label="Shorter window">−</button>
-                  <output id="pol-window">4s</output>
-                  <button type="button" data-key="windowSec" data-step="1" aria-label="Longer window">+</button>
+                <div class="stepper">
+                  <div class="stepper-label">Requests<small>2 to 8</small></div>
+                  <div class="stepper-ctl">
+                    <button type="button" data-key="limit" data-step="-1" aria-label="Fewer requests">−</button>
+                    <output id="pol-limit">4</output>
+                    <button type="button" data-key="limit" data-step="1" aria-label="More requests">+</button>
+                  </div>
                 </div>
+                <div class="stepper">
+                  <div class="stepper-label">Window<small>2 to 8 seconds</small></div>
+                  <div class="stepper-ctl">
+                    <button type="button" data-key="windowSec" data-step="-1" aria-label="Shorter window">−</button>
+                    <output id="pol-window">4s</output>
+                    <button type="button" data-key="windowSec" data-step="1" aria-label="Longer window">+</button>
+                  </div>
+                </div>
+                <p class="pop-note">Changes apply to every step and restart the current one.</p>
               </div>
-              <p class="pop-note">Applies to every step and restarts the current one.</p>
             </div>
             <a class="github" href="https://github.com/mafzaldev" target="_blank" rel="noopener" aria-label="mafzaldev on GitHub" title="mafzaldev on GitHub">
               <svg viewBox="0 0 16 16" aria-hidden="true">
