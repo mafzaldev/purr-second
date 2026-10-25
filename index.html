@@ -1,118 +1,140 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Purr Second</title>
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;800&family=DM+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <header class="sign">
-    <div class="sign-inner">
-      <div class="sign-top">
-        <span class="brand">
-          <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="var(--ginger)" d="M5 4l7 6a13 13 0 0 1 8 0l7-6 1 11a12 12 0 1 1-24 0z"/><circle cx="12" cy="17" r="1.8" fill="var(--band)"/><circle cx="20" cy="17" r="1.8" fill="var(--band)"/></svg>
-          Purr Second <span class="brand-sub">a visual guide to rate limiting</span>
-        </span>
-        <div class="policy">
-          <button class="limit-sign" id="policy-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="policy-pop" title="Change the rate limit">
-            <span class="rule"><b id="sign-limit">4</b> <span class="rule-unit">requests </span>per <b id="sign-window">4sec</b></span>
-            <span class="edit"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 2.5l2 2L6 12l-2.8.8L4 10z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Change</span>
-          </button>
-          <div class="policy-pop" id="policy-pop" role="dialog" aria-label="Change the rate limit" hidden>
-            <p class="pop-title">Rate limit</p>
-            <div class="stepper">
-              <span>Requests</span>
-              <div class="stepper-ctl">
-                <button type="button" data-key="limit" data-step="-1" aria-label="Fewer requests">−</button>
-                <output id="pol-limit">4</output>
-                <button type="button" data-key="limit" data-step="1" aria-label="More requests">+</button>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Purr Second</title>
+    <link rel="icon" href="cats/cat-ginger.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;800&family=DM+Mono:wght@400;500&display=swap"
+      media="print"
+      onload="this.media = 'all'"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="sign">
+      <div class="sign-inner">
+        <div class="sign-top">
+          <span class="brand">
+            <img src="cats/cat-ginger.svg" alt="" width="30" height="30" />
+            Purr Second <span class="brand-sub">a visual guide to rate limiting</span>
+          </span>
+          <div class="policy">
+            <button
+              class="limit-sign"
+              id="policy-btn"
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-controls="policy-pop"
+              title="Change the rate limit"
+            >
+              <span class="rule"><b id="sign-limit">4</b> <span class="rule-unit">requests </span>per <b id="sign-window">4sec</b></span>
+              <span class="edit"
+                ><svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M11.5 2.5l2 2L6 12l-2.8.8L4 10z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /></svg
+                >Change</span
+              >
+            </button>
+            <div class="policy-pop" id="policy-pop" role="dialog" aria-label="Change the rate limit" hidden>
+              <p class="pop-title">Rate limit</p>
+              <div class="stepper">
+                <span>Requests</span>
+                <div class="stepper-ctl">
+                  <button type="button" data-key="limit" data-step="-1" aria-label="Fewer requests">−</button>
+                  <output id="pol-limit">4</output>
+                  <button type="button" data-key="limit" data-step="1" aria-label="More requests">+</button>
+                </div>
               </div>
-            </div>
-            <div class="stepper">
-              <span>Per window of</span>
-              <div class="stepper-ctl">
-                <button type="button" data-key="windowSec" data-step="-1" aria-label="Shorter window">−</button>
-                <output id="pol-window">4s</output>
-                <button type="button" data-key="windowSec" data-step="1" aria-label="Longer window">+</button>
+              <div class="stepper">
+                <span>Per window of</span>
+                <div class="stepper-ctl">
+                  <button type="button" data-key="windowSec" data-step="-1" aria-label="Shorter window">−</button>
+                  <output id="pol-window">4s</output>
+                  <button type="button" data-key="windowSec" data-step="1" aria-label="Longer window">+</button>
+                </div>
               </div>
+              <p class="pop-note">Applies to every step and restarts the current one.</p>
             </div>
-            <p class="pop-note">Applies to every step and restarts the current one.</p>
+            <a class="github" href="https://github.com/mafzaldev" target="_blank" rel="noopener" aria-label="mafzaldev on GitHub" title="mafzaldev on GitHub">
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+                />
+              </svg>
+            </a>
           </div>
-          <a class="github" href="https://github.com/mafzaldev" target="_blank" rel="noopener" aria-label="mafzaldev on GitHub" title="mafzaldev on GitHub">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          </a>
         </div>
+        <nav class="steps" id="steps" aria-label="Steps"></nav>
       </div>
-      <nav class="steps" id="steps" aria-label="Steps"></nav>
-    </div>
-  </header>
+    </header>
 
-  <main class="page">
-    <section class="lesson">
-      <p class="eyebrow" id="eyebrow"></p>
-      <h1 id="title"></h1>
-      <p class="lead" id="lead"></p>
-      <div id="lesson-body"></div>
-    </section>
-
-    <div class="stage-area">
-      <section class="instrument" id="lab">
-        <canvas id="stage" aria-label="Animated view of requests passing through the rate limiter"></canvas>
-        <div class="transport">
-          <button id="play" class="primary">Play scenario</button>
-          <button id="restart">Restart</button>
-          <select id="speed" aria-label="Playback speed">
-            <option value="0.5">0.5×</option>
-            <option value="1" selected>1×</option>
-            <option value="2">2×</option>
-          </select>
-          <span class="spacer"></span>
-          <button id="send" title="Space">Send request</button>
-          <button id="burst">Burst ×5</button>
-        </div>
-        <p class="readout" id="lab-stats"></p>
-        <ol class="log" id="narration" aria-live="polite" aria-label="Event log" tabindex="0"></ol>
+    <main class="page">
+      <section class="lesson">
+        <p class="eyebrow" id="eyebrow"></p>
+        <h1 id="title"></h1>
+        <p class="lead" id="lead"></p>
+        <div id="lesson-body"></div>
       </section>
 
-      <section class="instrument is-off" id="compare" inert>
-        <div class="patterns" id="patterns" role="tablist" aria-label="Traffic pattern"></div>
-        <p class="pattern-desc" id="pattern-desc"></p>
-        <div class="compare-table">
-          <div class="row head">
-            <span>Algorithm</span><span>Timeline</span><span>Accepted</span><span>Rejected</span>
-            <span id="peak-head" title="Most requests that reached the API in any one window">Peak / 4s</span><span>Avg wait</span>
+      <div class="stage-area">
+        <section class="instrument" id="lab">
+          <canvas id="stage" aria-label="Animated view of requests passing through the rate limiter"></canvas>
+          <div class="transport">
+            <button id="play" class="primary">Play scenario</button>
+            <button id="restart">Restart</button>
+            <select id="speed" aria-label="Playback speed">
+              <option value="0.5">0.5×</option>
+              <option value="1" selected>1×</option>
+              <option value="2">2×</option>
+            </select>
+            <span class="spacer"></span>
+            <button id="send" title="Space">Send request</button>
+            <button id="burst">Burst ×5</button>
           </div>
-          <div id="compare-rows"></div>
-        </div>
-        <div class="transport">
-          <button id="compare-replay" class="primary">Replay</button>
-          <select id="compare-speed" aria-label="Comparison speed">
-            <option value="1" selected>1×</option>
-            <option value="2">2×</option>
-            <option value="4">4×</option>
-            <option value="8">8×</option>
-          </select>
-          <button id="compare-skip">Skip to results</button>
-        </div>
-        <div class="takeaway" id="takeaway"></div>
-      </section>
-    </div>
-  </main>
+          <p class="readout" id="lab-stats"></p>
+          <ol class="log" id="narration" aria-live="polite" aria-label="Event log" tabindex="0"></ol>
+        </section>
 
-  <footer class="pager">
-    <div class="pager-inner">
-      <button id="prev">Back</button>
-      <span id="position"></span>
-      <button id="next" class="primary">Next</button>
-    </div>
-  </footer>
+        <section class="instrument is-off" id="compare" inert>
+          <div class="patterns" id="patterns" role="tablist" aria-label="Traffic pattern"></div>
+          <p class="pattern-desc" id="pattern-desc"></p>
+          <div class="compare-table">
+            <div class="row head">
+              <span>Algorithm</span><span>Timeline</span><span>Accepted</span><span>Rejected</span>
+              <span id="peak-head" title="Most requests that reached the API in any one window">Peak / 4s</span><span>Avg wait</span>
+            </div>
+            <div id="compare-rows"></div>
+          </div>
+          <div class="transport">
+            <button id="compare-replay" class="primary">Replay</button>
+            <select id="compare-speed" aria-label="Comparison speed">
+              <option value="1" selected>1×</option>
+              <option value="2">2×</option>
+              <option value="4">4×</option>
+              <option value="8">8×</option>
+            </select>
+            <button id="compare-skip">Skip to results</button>
+          </div>
+          <div class="takeaway" id="takeaway"></div>
+        </section>
+      </div>
+    </main>
 
-  <script src="limiters.js"></script>
-  <script src="app.js"></script>
-</body>
+    <footer class="pager">
+      <div class="pager-inner">
+        <button id="prev">Back</button>
+        <span id="position"></span>
+        <button id="next" class="primary">Next</button>
+      </div>
+    </footer>
+
+    <script src="limiters.js"></script>
+    <script src="app.js"></script>
+  </body>
 </html>
