@@ -759,6 +759,7 @@
     for (const b of $('patterns').children) b.setAttribute('aria-selected', String(b.dataset.pattern === cmp.pattern));
     $('pattern-desc').textContent = p.desc;
     $('takeaway').textContent = '';
+    $('compare-skip').disabled = false;
     cmp.now = 0;
     cmp.playing = true;
     for (const row of cmp.rows) {
@@ -780,7 +781,7 @@
   function advanceCompare(dt) {
     if (!cmp.playing) return;
     const p = PATTERNS[cmp.pattern];
-    cmp.now = Math.min(p.duration, cmp.now + dt);
+    cmp.now = Math.min(p.duration, cmp.now + dt * Number($('compare-speed').value));
     for (const row of cmp.rows) {
       while (row.results.length < p.times.length && p.times[row.results.length] <= cmp.now) {
         const at = p.times[row.results.length];
@@ -792,6 +793,7 @@
     }
     if (cmp.now >= p.duration) {
       cmp.playing = false;
+      $('compare-skip').disabled = true;
       for (const row of cmp.rows) row.peak = peak(row.results.filter((r) => r.ok && r.servedAt <= cmp.now).map((r) => r.servedAt).sort((a, b) => a - b));
       $('takeaway').textContent = `${p.insight} ${overLimitSummary()}`;
     }
@@ -964,6 +966,7 @@
   $('send').addEventListener('click', () => sendManual(1, 0));
   $('burst').addEventListener('click', () => sendManual(5, 80));
   $('compare-replay').addEventListener('click', resetCompare);
+  $('compare-skip').addEventListener('click', () => advanceCompare(Infinity));
   $('prev').addEventListener('click', () => goTo(current - 1));
   $('next').addEventListener('click', () => goTo(current + 1));
 
