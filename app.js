@@ -754,8 +754,8 @@
   }
 
   function drawTimeline(ctx, t, now) {
-    const plotX = t.x + 34;
-    const plotW = t.w - 34;
+    const plotX = t.x + 44;
+    const plotW = t.w - 44;
     const from = now - TIMELINE_SPAN;
     const x = (time) => plotX + ((time - from) / TIMELINE_SPAN) * plotW;
     const rows = { ok: t.y + 14, no: t.y + 34, out: t.y + 54 };
@@ -780,10 +780,10 @@
       ctx.setLineDash([]);
     }
 
+    const leaky = lab.limiter instanceof LeakyBucket;
     text(ctx, "200", t.x, rows.ok + 4, { size: 10, color: C.muted, mono: true });
     text(ctx, "429", t.x, rows.no + 4, { size: 10, color: C.muted, mono: true });
-    const leaky = lab.limiter instanceof LeakyBucket;
-    if (leaky) text(ctx, "→API", t.x, rows.out + 4, { size: 10, color: C.muted, mono: true });
+    if (leaky) text(ctx, "queued", t.x, rows.out + 4, { size: 10, color: C.muted, mono: true });
 
     const dot = (time, y, color) => {
       if (time < from) return;
@@ -794,8 +794,12 @@
     };
     for (const r of lab.requests) {
       if (!r.decided) continue;
-      dot(r.at, r.ok ? rows.ok : rows.no, r.ok ? C.ok : C.no);
-      if (leaky && r.ok && r.processAt <= now) dot(r.processAt, rows.out, C.out);
+      if (!r.ok) dot(r.at, rows.no, C.no);
+      else if (!leaky) dot(r.at, rows.ok, C.ok);
+      else {
+        dot(r.at, rows.out, C.warn);
+        if (r.processAt <= now) dot(r.processAt, rows.ok, C.ok);
+      }
     }
     text(ctx, `−${TIMELINE_SPAN / 1000}s`, plotX, t.y + t.h + 4, { size: 10, color: C.muted, mono: true });
     text(ctx, "now", t.x + t.w, t.y + t.h + 4, { size: 10, color: C.muted, align: "right", mono: true });
